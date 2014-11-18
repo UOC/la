@@ -1,3 +1,2 @@
 var aeprequest = require("./aeprequest");
-
-aeprequest.query();
+aeprequest.execute();

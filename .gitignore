@@ -1,2 +1,4 @@
-data/
+data
 import/data
+query/.idea
+query/node_modules

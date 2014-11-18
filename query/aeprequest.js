@@ -15,6 +15,7 @@ aep.execute = function() {
     db.statements.mapReduce(
         mapper,
         reducer, {
+            query: { "verb.id": "http://la.uoc.edu/verb/aeprequest" },
             out: "aep"
         }
     );
