@@ -3,5 +3,6 @@ exports.settings = {
       source_collection: 'statements',
       destination_collection: 'aep',
       destination_collection_enrolment: 'matricula_per_semestres',
-      destination_collection_enrolment_by_user: 'matricula_per_usuaris'
+      destination_collection_enrolment_by_user: 'matricula_per_usuaris',
+      destination_collection_enrolment_by_user_and_semester: 'matricula_per_usuaris_i_semestres'
 }

@@ -54,6 +54,36 @@ matricula.enrollmentsByUser = function() {
     } );
 };
 
+matricula.enrollmentsByUserAndSemester = function() {
+  var collection = eval('db.'+config.destination_collection_enrolment_by_user);
+  /*
+   * This is the API call, but allowDiskUse doesn't propagate to mongo,
+   * so we use the generic runCommand method
+    collection.aggregate([
+      {$unwind: "$semester"},
+      {$project: { code: "$semester.definition.extensions.edu:uoc:la:semester.code"}},
+      {$group: {
+        _id: {user: "$_id", code: "$code"},
+        total: {$sum:1}
+      }}
+    ])
+  */
+  collection.runCommand("aggregate", {pipeline:[
+    {$unwind: "$semester"},
+    {$project: { code: "$semester.definition.extensions.edu:uoc:la:semester.code"}},
+    {$group: {
+      _id: {user: "$_id", code: "$code"},
+      total: {$sum:1}
+    }}
+  ], allowDiskUse:true
+  }, function(err, res) {
+    if (err) console.log(err);
+    console.log(res);
+    // we can query those students enrolled in more than 1 semestre using:
+    // db.matricula_per_usuaris.find({ $where: "this.semester.length > 1" })
+  } );
+};
+
 matricula.query = function() {
     var collection = eval('db.'+config.source_collection);
     var j = 0;
