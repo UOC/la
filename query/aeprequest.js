@@ -1,5 +1,6 @@
 var mongojs = require('mongojs');
-var db = mongojs('mongodb://localhost:27017/lrs', ['statements', 'aep']);
+var config = require('./config/settings').settings;
+var db = mongojs(config.db_connection_url, [config.source_collection, config.destination_collection]);
 
 var aep = {};
 
@@ -12,18 +13,18 @@ aep.execute = function() {
         return Array.sum(count);
     };
 
-    db.statements.mapReduce(
-        mapper,
-        reducer, {
-            query: { "verb.id": "http://la.uoc.edu/verb/aeprequest" },
-            out: "aep"
-        }
-    );
+    eval('db.'+config.source_collection+'.mapReduce('+
+        'mapper,'+
+        'reducer, {'+
+            'query: { "verb.id": "http://la.uoc.edu/verb/aeprequest" },'+
+	    'out: "'+config.destination_collection+'"'+
+        '}'+
+    ');');
 
-    db.aep.find(function (err, docs) {
-        if (err) console.log(err);
-        console.log("\n", docs);
-    });
+    eval('db.'+config.source_collection+'.find(function (err, docs) {'+
+        'if (err) console.log(err);'+
+        'console.log("\\\n", docs);'+
+    '});');
 };
 
 aep.query = function() {
