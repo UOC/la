@@ -1,3 +1,3 @@
 var matricula = require("./matricula");
-//matricula.query();
-matricula.execute();
+matricula.query();
+//matricula.enrollmentsBySemester();
