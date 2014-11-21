@@ -1,4 +1,6 @@
+var config = require('./config/settings').settings;
 var notes = require("./notes");
 //notes.query();
-//matricula.enrollmentsBySemester();
+console.log("FIRST you have to execute gradesByUser then gradesBySemester");
+//notes.gradesByUser();
 notes.gradesBySemester();
