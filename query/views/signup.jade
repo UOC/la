@@ -1,0 +1,11 @@
+extends layout
+#{error}
+block content
+  h1= title
+   div.signupbox
+    form(name="signup", action="/signup", method="post")
+        div(class="form-group")
+            input(type="text", name="email", class="form-control")
+        div(class="form-group") 
+            input(type="password", name="pass", class="form-control")
+        input(type="submit", value="signup", class="btn btn-warning btn-lg")

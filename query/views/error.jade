@@ -1,0 +1,10 @@
+extends layout
+
+block content
+	div.row
+		if (typeof message !== "undefined")
+			div(class="alert alert-danger") #{message}
+		else 
+			Undefined Error  
+		if (typeof error !== "undefined")  
+			pre #{error.stack}
