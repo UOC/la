@@ -59,11 +59,15 @@ module.exports = function (router, passport) {
 
         // set content-type header and data as json in args parameter
         client.get(url, function (data, response) {
-          code = hljs.highlight('javascript', data);
-          var result = {
-            content: code.value
-          };
-          res.status(200).json(result);
+	  if (data && data.length>0){
+         	 code = hljs.highlight('javascript', data);
+         	 var result = {
+            		content: code.value
+          	};
+          	res.status(200).json(result);
+	 } else {
+		res.status(404).json({error:'Not found'});
+	}
         }).on('error', function (err) {
             if (err.code == 'ECONNREFUSED') {
                 console.warn('Can\'t connect to ' + url + ' review the configuration', err);
