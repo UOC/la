@@ -40,7 +40,6 @@ module.exports = function (router, passport) {
 
     // Render the dashboard page.
     router.post('/dashboard', helper.isAuthenticated, function (req, res) {
-      var hljs = require('highlight.js');
       var hostArray = req.get('host').split(":");
       if (hostArray.length==1) {
         hostArray[1] = 80;
@@ -59,7 +58,10 @@ module.exports = function (router, passport) {
 
         // set content-type header and data as json in args parameter
         client.get(url, function (data, response) {
-	  if (data && data.length>0){
+	  
+	if (data && data.length>0){
+
+      		var hljs = require('highlight.js');
          	 code = hljs.highlight('javascript', data);
          	 var result = {
             		content: code.value
