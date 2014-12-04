@@ -1,4 +1,5 @@
 data
 import/data
 query/.idea
+query/config/lrs.js
 query/node_modules
