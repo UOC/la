@@ -1,0 +1,52 @@
+extends layout
+#{error}
+block head
+  script(src="/javascripts/la.js")
+  script(src="https://highlightjs.org/static/highlight.pack.js")
+  link(rel='stylesheet', href='https://highlightjs.org/static/styles/default.css')
+  //-link(rel='stylesheet', href='https://highlightjs.org/static/styles/solarized_dark.css')
+  //-link(rel='stylesheet', href='https://highlightjs.org/static/styles/solarized_light.css')
+  link(rel='stylesheet', href='https://highlightjs.org/static/styles/github.css')
+  //-link(rel='stylesheet', href='https://highlightjs.org/static/styles/monokai_sublime.css')
+  
+block content
+  div.row
+    div.col-md-9
+      h1= title
+    div(class="bottom-aligned-text col-md-3 text-right")
+      button(type="button", id="logout", class="btn btn-danger", aria-label="Close session")
+        span(class="glyphicon glyphicon-remove-circle", aria-hidden="true") &nbsp;Logout
+
+  if (typeof message !== "undefined")
+    div(class="alert alert-danger") #{message}
+  if user
+    div.welcomebox
+      // Filtered inline output
+      p.
+        Welcome, #{user.name}
+  form(name="query", action="", method="post")
+    div.row
+      div.col-md-8
+        div(class="form-group") 
+          input(type="text", name="query", id="query", class="form-control")
+          span.help-block Set the query
+      div.col-md-2
+        div(class="form-group") 
+          div.row
+            div.col-md-2
+              span(class="glyphicon glyphicon-chevron-left", aria-hidden="true", id="fromPrevious") 
+            div.col-md-6
+              input(type="text", name="from", id="from", class="form-control", value="0")
+              span.help-block From
+            div.col-md-4
+              span(class="glyphicon glyphicon-chevron-right", aria-hidden="true", id="fromNext") 
+      div.col-md-1
+        div(class="form-group") 
+          input(type="text", name="limit", id="limit", class="form-control", value="50")
+          span.help-block Limit
+      div.col-md-1
+        div(class="form-group") 
+          input(type="button", id="send", value="send", class="btn btn-warning")
+    div.row
+      div.col-md-6
+        div(id="result")  

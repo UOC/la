@@ -1,0 +1,24 @@
+extends layout
+#{error}
+block content
+  h1= title
+  p Welcome to #{title}
+  //-p
+  //- a(href="/signup", class="btn btn-default") Signup
+  if (typeof messageInfo !== "undefined" && messageInfo != "")
+    div(class="alert alert-info") #{messageInfo}
+  if (typeof message !== "undefined" && message != "")
+    div(class="alert alert-danger") #{message}
+  if user
+    div.welcomebox
+      // Filtered inline output
+      p.
+        Welcome, #{user.name}
+  else
+    div.loginbox
+      form(name="login", action="/login", method="post")
+        div(class="form-group") 
+          input(type="text", name="username", class="form-control")
+        div(class="form-group") 
+          input(type="password", name="password", class="form-control")
+        input(type="submit", value="login", class="btn btn-warning")

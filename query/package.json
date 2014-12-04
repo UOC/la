@@ -1,9 +1,26 @@
 {
-    "name": "query",
-    "version": "0.0.1",
-    "private": true,
-    "dependencies": {
-        "mongojs": "latest",
-        "tincanjs": "latest"
-    }
+  "name": "query",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "mongojs": "latest",
+    "connect-mongo": "latest",
+    "express": "latest",
+    "express-session": "latest",
+    "cookie-parser": "latest",
+    "body-parser": "latest",
+    "serve-favicon": "latest",
+    "morgan": "~1.0.0",
+    "passport": "latest",
+    "passport-local": "latest",
+    "connect-flash": "latest",
+    "jade": "latest",
+    "cluster": "latest",
+    "node-rest-client": "latest",
+    "fs": "latest",
+    "restify": "2.3.x",
+    "mongodb": "1.2.x",
+    "i18next": "latest",
+    "tincanjs": "latest"
+  }
 }
