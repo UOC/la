@@ -20,7 +20,7 @@
     "fs": "latest",
     "restify": "2.3.x",
     "mongodb": "1.2.x",
-    "i18next": "latest"
-    
+    "i18next": "latest",
+    "tincanjs": "latest"
   }
 }
