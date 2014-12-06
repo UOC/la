@@ -48,28 +48,27 @@ module.exports = function (router, passport) {
       }
       var from = parseInt((req.body.from)?req.body.from:0,10);
       var limit = parseInt((req.body.limit)?req.body.limit:50,10);
-      var query = (req.body.query && req.body.query.length>0) ?req.body.query:'/lrs/statements';
-      var url = req.protocol + '://' + hostArray[0] + ":" + (hostArray[1]+1) + query+'?&limit='+limit+'&skip='+from;
+      var query = (req.body.query && req.body.query.length>0) ?req.body.query:'/lrs/statements?';
+      var url = req.protocol + '://' + hostArray[0] + ":" + (hostArray[1]+1) + query+'&limit='+limit+'&skip='+from;
       //var url = req.protocol + '://' + hostArray[0] + ":" + (hostArray[1]+1) + '/lrs/statements';
 
       var Client = require('node-rest-client').Client;
 
       var client = new Client();
 
+      console.log("get url", url);
         // set content-type header and data as json in args parameter
         client.get(url, function (data, response) {
-	  
-	if (data && data.length>0){
-
-      		var hljs = require('highlight.js');
-         	 code = hljs.highlight('javascript', data);
-         	 var result = {
-            		content: code.value
-          	};
-          	res.status(200).json(result);
-	 } else {
-		res.status(404).json({error:'Not found'});
-	}
+          if (data && data.length>0) {
+        		var hljs = require('highlight.js');
+           	code = hljs.highlight('javascript', data);
+           	var result = {
+              		content: code.value
+            };
+            res.status(200).json(result);
+        	} else {
+        		res.status(404).json({error:'Not found'});
+        	}
         }).on('error', function (err) {
             if (err.code == 'ECONNREFUSED') {
                 console.warn('Can\'t connect to ' + url + ' review the configuration', err);
