@@ -95,7 +95,7 @@ module.exports = function (router, passport) {
       var from = parseInt((req.body.from)?req.body.from:0,10);
       var limit = parseInt((req.body.limit)?req.body.limit:50,10);
       var collection =  (req.body.collection && req.body.collection.length>0)?req.body.collection:settings.source_collection;
-      if (db.prefix_consolidated) {
+      if (collection!=settings.source_collection && db.prefix_consolidated) {
         collection = db.prefix_consolidated + collection;
       }
       var query = '/'+db.dbName+'/'+ collection + '?' + ((req.body.query && req.body.query.length>0) ?"query="+encodeURIComponent("{"+req.body.query+"}"):'');
