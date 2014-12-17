@@ -1,7 +1,8 @@
 var db = {
     dbName: 'lrs',
     dbHost: 'localhost',
-    dbPort: 27017
+    dbPort: 27017,
+    prefix_consolidated: 'consolidated_'
 };
 
 var settings = {
