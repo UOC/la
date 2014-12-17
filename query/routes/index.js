@@ -39,6 +39,48 @@ module.exports = function (router, passport) {
       res.render('dashboard', {title: 'Dashboard', user: req.user, 'collections': collections});
     });
 
+    // Consolidate all data
+    router.post('/consolidate_data', helper.isAuthenticated, function (req, res) {
+      var collections = require('../config/settings').collections;
+      var mongojs = require('mongojs');
+      var config = require('../config/settings').settings;
+      var dbConf = require('../config/settings').db;
+      var collections_destination = [];
+      if (dbConf.prefix_consolidated) {
+        var BSON = require("mongodb").BSONPure;
+        collections.forEach(function(collection){
+          var destination_collection = dbConf.prefix_consolidated+collection;
+          collections_destination.push(destination_collection);
+        });
+        var all_collections = collections.concat(collections_destination);
+        var db = mongojs(config.db_connection_url, all_collections);
+        collections.forEach(function(collection){
+          if (collection!=config.source_collection){
+            var destination_collection = eval('db.'+dbConf.prefix_consolidated+collection);
+            var source_collection = eval('db.'+collection);
+            //destination_collection.delete({});
+            destination_collection.runCommand("{delete({})}");
+            var cursor = source_collection.find();
+            cursor.forEach(function(err, item) {
+              // If the item is null then the cursor is exhausted/empty and closed
+              if(item == null) {
+
+              } else {
+                item.key = item._id;
+                item._id= new BSON.ObjectID();
+                destination_collection.insert(item);
+              }
+            });
+          }
+            //source_collection.runCommand(eval("{find().forEach(function(doc){ doc.key = doc._id; doc._id=ObjectId();db."+dbConf.prefix_consolidated+collection+".insert(doc);});}"));
+            //eval("db."+collection+".find().forEach(function(doc){ doc.key = doc._id; doc._id=ObjectId();db."+destination_collection+".insert(doc);});");
+        });
+        
+      }
+      else {
+        res.status(500).json(false);    
+      }
+    });
     // Render the dashboard page.
     router.post('/dashboard', helper.isAuthenticated, function (req, res) {
       var hostArray = req.get('host').split(":");
@@ -49,14 +91,17 @@ module.exports = function (router, passport) {
       }
       var settings = require('../config/settings').settings; 
       var db = require('../config/settings').db; 
-
+      
       var from = parseInt((req.body.from)?req.body.from:0,10);
       var limit = parseInt((req.body.limit)?req.body.limit:50,10);
       var collection =  (req.body.collection && req.body.collection.length>0)?req.body.collection:settings.source_collection;
+      if (db.prefix_consolidated) {
+        collection = db.prefix_consolidated + collection;
+      }
       var query = '/'+db.dbName+'/'+ collection + '?' + ((req.body.query && req.body.query.length>0) ?"query="+encodeURIComponent("{"+req.body.query+"}"):'');
       var url = req.protocol + '://' + hostArray[0] + ":" + (hostArray[1]+1) + query+'&limit='+limit+'&skip='+from;
       //var url = req.protocol + '://' + hostArray[0] + ":" + (hostArray[1]+1) + '/lrs/statements';
-console.log("Query "+url);
+      console.log("Query "+url);
       var Client = require('node-rest-client').Client;
 
       var client = new Client();
