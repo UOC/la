@@ -1,32 +1,10 @@
 $( document ).ready(function() {
 
   $('#consolidate_data').click(function(){
-    $('#result').html("Processing ....");
-      $('#send').prop('disabled', 'disabled');
-      $('#consolidate_data').prop('disabled', 'disabled');
-      var data = {
-        collection: $('#collection').val(),
-        query: $('#query').val(),
-        from: $('#from').val(),
-        limit: $('#limit').val()
-      };
-      $.post( "/consolidate_data", data, function(ret) {
-        if (ret) {
-          $('#result').html("Data consolidated!");
-        }
-        else {
-          $('#result').html("Error consildating data!");
-        }
-        //hljs.highlightBlock($('#result').get(0));
-
-      })
-      .fail(function() {
-         $('#result').html("Error consildating data!");
-      })
-      .always(function() {
-          $('#send').prop('disabled', '');
-          $('#consolidate_data').prop('disabled', '');
-      });    
+    consolidateDataLA($('#collection').val());
+  });
+  $('#consolidate_data_all').click(function(){
+    consolidateDataLA('');
   });
 
   $('#send').click(function(){
@@ -59,7 +37,7 @@ $( document ).ready(function() {
       };
       $.post( "/dashboard", data, function(ret) {
         $('#result').html(ret.content);
-        //hljs.highlightBlock($('#result').get(0));
+        /*hljs.highlightBlock($('#result').get(0));*/
 
       })
       .fail(function() {
@@ -69,5 +47,30 @@ $( document ).ready(function() {
           $('#send').prop('disabled', '');
           $('#consolidate_data').prop('disabled', '');
       });    
+  }
+  consolidateDataLA = function(collection) {
+      $('#result').html("Processing ....");
+      $('#send').prop('disabled', 'disabled');
+      $('#consolidate_data').prop('disabled', 'disabled');
+      var data = {
+        collection: collection,
+      };
+      $.post( "/consolidate_data", data, function(ret) {
+        if (ret) {
+          $('#result').html("Data consolidated!");
+        }
+        else {
+          $('#result').html("Error consildating data!");
+        }
+
+      })
+      .fail(function() {
+         $('#result').html("Error consildating data!");
+      })
+      .always(function() {
+          $('#send').prop('disabled', '');
+          $('#consolidate_data').prop('disabled', '');
+      });    
+
   }
 });
