@@ -1,7 +1,7 @@
-var aeprequest = require("./aeprequest");
+var titulacions = require("./titulacions");
 var util = require("util");
 
-aeprequest.execute(function(err, collection) {
+titulacions.execute(function(err, collection) {
     if (err) console.log(err);
     collection.count({}, function(err, count) {
         if (err) console.log(err);
