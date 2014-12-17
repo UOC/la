@@ -26,7 +26,14 @@ block content
         Welcome, #{user.name}
   form(name="query", action="", method="post")
     div.row
-      div.col-md-8
+      div.col-md-2
+        div(class="form-group") 
+          select(name="collection", id="collection", class="form-control")
+            each item in collections
+              option(value="#{item}") #{item}
+            
+          span.help-block Select collection
+      div.col-md-6
         div(class="form-group") 
           input(type="text", name="query", id="query", class="form-control")
           span.help-block Set the query

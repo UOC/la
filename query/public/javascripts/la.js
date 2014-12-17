@@ -22,6 +22,7 @@ $( document ).ready(function() {
     $('#result').html("Loading ....");
       $('#send').prop('disabled', 'disabled');
       var data = {
+        collection: $('#collection').val(),
         query: $('#query').val(),
         from: $('#from').val(),
         limit: $('#limit').val()

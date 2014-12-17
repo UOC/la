@@ -35,7 +35,8 @@ module.exports = function (router, passport) {
 
     // Render the dashboard page.
     router.get('/dashboard', helper.isAuthenticated, function (req, res) {
-      res.render('dashboard', {title: 'Dashboard', user: req.user});
+      var collections = require('../config/settings').collections; 
+      res.render('dashboard', {title: 'Dashboard', user: req.user, 'collections': collections});
     });
 
     // Render the dashboard page.
@@ -46,22 +47,25 @@ module.exports = function (router, passport) {
       } else {
         hostArray[1] = parseInt(hostArray[1], 10);
       }
+      var settings = require('../config/settings').settings; 
+      var db = require('../config/settings').db; 
+
       var from = parseInt((req.body.from)?req.body.from:0,10);
       var limit = parseInt((req.body.limit)?req.body.limit:50,10);
-      var query = (req.body.query && req.body.query.length>0) ?req.body.query:'/lrs/statements?';
+      var collection =  (req.body.collection && req.body.collection.length>0)?req.body.collection:settings.source_collection;
+      var query = '/'+db.dbName+'/'+ collection + '?' + ((req.body.query && req.body.query.length>0) ?"query="+encodeURIComponent("{"+req.body.query+"}"):'');
       var url = req.protocol + '://' + hostArray[0] + ":" + (hostArray[1]+1) + query+'&limit='+limit+'&skip='+from;
       //var url = req.protocol + '://' + hostArray[0] + ":" + (hostArray[1]+1) + '/lrs/statements';
-
+console.log("Query "+url);
       var Client = require('node-rest-client').Client;
 
       var client = new Client();
 
-      console.log("get url", url);
         // set content-type header and data as json in args parameter
         client.get(url, function (data, response) {
           if (data && data.length>0) {
         		var hljs = require('highlight.js');
-           	code = hljs.highlight('javascript', data);
+           	code = hljs.highlight('json', data);
            	var result = {
               		content: code.value
             };
