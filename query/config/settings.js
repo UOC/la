@@ -1,11 +1,11 @@
 var db = {
     dbName: 'lrs',
-    dbHost: 'localhost',
+    dbHost: '54.217.220.126',
     dbPort: 27017
 };
 
 var settings = {
-    db_connection_url: 'mongodb://'+db.dbHost+':'+db.dbHost+'/'+db.dbPort,
+    db_connection_url: 'mongodb://'+db.dbHost+':'+db.dbPort+'/'+db.dbName,
     source_collection: 'statements',
     destination_collection_aep: 'aep',
     destination_collection_grades: 'notes_per_semestres',
