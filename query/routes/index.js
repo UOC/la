@@ -46,6 +46,10 @@ module.exports = function (router, passport) {
       var config = require('../config/settings').settings;
       var dbConf = require('../config/settings').db;
       var collections_destination = [];
+      var collection =  (req.body.collection && req.body.collection.length>0)?req.body.collection:'';
+      if (collection != '') {
+        collections = [collection];
+      }
       if (dbConf.prefix_consolidated) {
         var BSON = require("mongodb").BSONPure;
         collections.forEach(function(collection){
@@ -54,6 +58,7 @@ module.exports = function (router, passport) {
         });
         var all_collections = collections.concat(collections_destination);
         var db = mongojs(config.db_connection_url, all_collections);
+        var total_collections = collections.length;
         collections.forEach(function(collection){
           if (collection!=config.source_collection){
             var destination_collection = eval('db.'+dbConf.prefix_consolidated+collection);
@@ -63,7 +68,10 @@ module.exports = function (router, passport) {
               cursor.forEach(function(err, item) {
                 // If the item is null then the cursor is exhausted/empty and closed
                 if(item == null) {
-
+                  total_collections--;
+                  if (total_collections==0) {
+                    res.status(200).json(true);    
+                  }
                 } else {
                   item.key = item._id;
                   item._id= new BSON.ObjectID();
