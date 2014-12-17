@@ -58,18 +58,18 @@ module.exports = function (router, passport) {
           if (collection!=config.source_collection){
             var destination_collection = eval('db.'+dbConf.prefix_consolidated+collection);
             var source_collection = eval('db.'+collection);
-            //destination_collection.delete({});
-            destination_collection.runCommand("{delete({})}");
-            var cursor = source_collection.find();
-            cursor.forEach(function(err, item) {
-              // If the item is null then the cursor is exhausted/empty and closed
-              if(item == null) {
+            destination_collection.remove({}, false, function(err) {
+              var cursor = source_collection.find();
+              cursor.forEach(function(err, item) {
+                // If the item is null then the cursor is exhausted/empty and closed
+                if(item == null) {
 
-              } else {
-                item.key = item._id;
-                item._id= new BSON.ObjectID();
-                destination_collection.insert(item);
-              }
+                } else {
+                  item.key = item._id;
+                  item._id= new BSON.ObjectID();
+                  destination_collection.insert(item);
+                }
+              });
             });
           }
             //source_collection.runCommand(eval("{find().forEach(function(doc){ doc.key = doc._id; doc._id=ObjectId();db."+dbConf.prefix_consolidated+collection+".insert(doc);});}"));
