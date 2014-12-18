@@ -32,6 +32,8 @@ $( document ).ready(function() {
       var data = {
         collection: $('#collection').val(),
         query: $('#query').val(),
+        sort: $('#sort').val(),
+        sort_order: $('#sort_order').val(),
         from: $('#from').val(),
         limit: $('#limit').val()
       };
@@ -53,9 +55,14 @@ $( document ).ready(function() {
       $('#send').prop('disabled', 'disabled');
       $('#consolidate_data').prop('disabled', 'disabled');
       var data = {
-        collection: collection,
+        
       };
-      $.post( "/consolidate_data", data, function(ret) {
+      $.ajax({
+        type: "POST",
+        url: "/consolidate_data",
+        data: { collection: collection },
+        timeout: 6000000, //60 min
+      }).done(function( ret ) {
         if (ret) {
           $('#result').html("Data consolidated!");
         }
