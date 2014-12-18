@@ -1,7 +1,7 @@
 var titulacions = require("./titulacions");
 var util = require("util");
 
-titulacions.execute(function(err, collection) {
+titulacions.notes(function(err, collection) {
     if (err) console.log(err);
     collection.count({}, function(err, count) {
         if (err) console.log(err);

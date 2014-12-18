@@ -10,14 +10,15 @@ var settings = {
     source_collection: 'statements',
     destination_collection_aep: 'aep',
     destination_collection_grades: 'notes_per_semestres',
+    destination_collection_grades_by_subject_and_semester: 'notes_per_assignatures_i_semestres',
     destination_collection_enrolment: 'matricula_per_semestres',
     destination_collection_enrolment_by_user: 'matricula_per_usuaris',
     destination_collection_enrolment_by_user_and_semester: 'matricula_per_usuaris_i_semestres',
     destination_collection_enrolment_by_degree: 'matricula_per_titulacions',
     destination_collection_enrolment_by_degree_and_semester: 'matricula_per_titulacions_i_semestres',
-    destination_collection_by_classroom_tool: 'bytool',
-    destination_collection_by_classroom_resource: 'byresource',
-    destination_collection_by_classroom: 'byclassroom'
+    destination_collection_by_classroom_tool: 'accessos_eines',
+    destination_collection_by_classroom_resource: 'accessos_recursos',
+    destination_collection_by_classroom: 'accessos_aules'
 
 };
 
