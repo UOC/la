@@ -100,6 +100,9 @@ module.exports = function (router, passport) {
       var settings = require('../config/settings').settings; 
       var db = require('../config/settings').db; 
       
+      var sort = (req.body.sort)?req.body.sort:'';
+      var sort_order = parseInt((req.body.sort_order)?req.body.sort_order:0,10);
+
       var from = parseInt((req.body.from)?req.body.from:0,10);
       var limit = parseInt((req.body.limit)?req.body.limit:50,10);
       var collection =  (req.body.collection && req.body.collection.length>0)?req.body.collection:settings.source_collection;
@@ -108,6 +111,9 @@ module.exports = function (router, passport) {
       }
       var query = '/'+db.dbName+'/'+ collection + '?' + ((req.body.query && req.body.query.length>0) ?"query="+encodeURIComponent("{"+req.body.query+"}"):'');
       var url = req.protocol + '://' + hostArray[0] + ":" + (hostArray[1]+1) + query+'&limit='+limit+'&skip='+from;
+      if (sort!='') {
+        url += '&sort='+encodeURIComponent(sort+':'+sort_order);
+      }
       //var url = req.protocol + '://' + hostArray[0] + ":" + (hostArray[1]+1) + '/lrs/statements';
       console.log("Query "+url);
       var Client = require('node-rest-client').Client;

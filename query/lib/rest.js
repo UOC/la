@@ -15,7 +15,6 @@ var MongoClient = require("mongodb").MongoClient,
 
 debug("rest.js is loaded");
 
-
 /**
  * Query
  */
@@ -54,23 +53,29 @@ function handleGet(req, res, next) {
   MongoClient.connect(util.connectionURL(req.params.db, config), function (err, db) {
     db.collection(req.params.collection, function (err, collection) {
       collection.find(query, options, function (err, cursor) {
-        cursor.toArray(function (err, docs) {
-          var result = [];
-          if (req.params.id) {
-            if (docs.length > 0) {
-              result = util.flavorize(docs[0], "out");
-              res.json(result, {'content-type': 'application/json; charset=utf-8'});
+        //abertranb
+        if (options.sort) {
+          var sortArray = options.sort.split(":");
+          var sortObject = {};
+          sortObject[sortArray[0]] = parseInt(sortArray[1],10);
+        }
+        cursor = cursor.sort(sortObject).toArray(function (err, docs) {
+            var result = [];
+            if (req.params.id) {
+              if (docs.length > 0) {
+                result = util.flavorize(docs[0], "out");
+                res.json(result, {'content-type': 'application/json; charset=utf-8'});
+              } else {
+                res.json(404);
+              }
             } else {
-              res.json(404);
+              docs.forEach(function (doc) {
+                result.push(util.flavorize(doc, "out"));
+              });
+              res.json(result, {'content-type': 'application/json; charset=utf-8'});
             }
-          } else {
-            docs.forEach(function (doc) {
-              result.push(util.flavorize(doc, "out"));
-            });
-            res.json(result, {'content-type': 'application/json; charset=utf-8'});
-          }
-          db.close();
-        });
+            db.close();
+          });
       });
     });
   });
