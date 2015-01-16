@@ -153,10 +153,7 @@ def create_ass_matr_statement(row):
 					},
 					'edu:uoc:la:semester': {
 						'code': any_academic,
-					},
-					'edu:uoc:la:classroom': {
-						'code': codi_aula,
-					},
+					}
 				})
 			})
 	    }),
