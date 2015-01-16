@@ -127,7 +127,47 @@ def create_Matricula_statement(row):
 		    'registration': uuid.uuid4(),
 		})
 	})
-	return json.loads(statement.to_json())	
+	return json.loads(statement.to_json())
+
+"""
+"""
+def create_ass_matr_statement(row):
+
+	cod_asignatura, any_academic, userid, idp = row
+	statement = Statement({
+	    'actor': Agent({
+	    	'account': AgentAccount({
+	    		'name': idp,
+	    	}),
+	    }),
+	    'verb': Verb({
+		    'id': 'http://la.uoc.edu/verb/subject/enrolment',
+		    'display': LanguageMap({'en-US': 'Enrolment'}),
+		}),
+	    'object': Activity({
+	    	'id': 'http://la.uoc.edu/object/subject/code/%s' % cod_asignatura,
+			'definition': ActivityDefinition({
+				'extensions': Extensions({
+					'edu:uoc:la:subject': {
+						'code': cod_asignatura
+					},
+					'edu:uoc:la:semester': {
+						'code': any_academic,
+					},
+					'edu:uoc:la:classroom': {
+						'code': codi_aula,
+					},
+				})
+			})
+	    }),
+	    'result': Result({
+	    }),
+	    'timestamp': datetime.datetime.utcnow(),
+		'context': Context({
+		    'registration': uuid.uuid4(),
+		})
+	})
+	return json.loads(statement.to_json())
 
 """
 """
@@ -190,7 +230,7 @@ def create_Performance_statement(row):
 		    'registration': uuid.uuid4(),
 		})
 	})
-	return json.loads(statement.to_json())	
+	return json.loads(statement.to_json())
 
 """
 """
@@ -218,9 +258,18 @@ def import_performance(collection):
 
 """
 """
+def import_assmatr(collection):
+    with open('data/matricula_per_usuaris_i_aules.csv', 'rb') as csvfile:
+        reader = csv.reader(csvfile, delimiter=';', quotechar='"')
+        next(reader, None)
+        collection.insert([create_ass_matr_statement(row) for row in reader])
+
+"""
+"""
 connection = Connection('localhost', 27017)
 db = connection.lrs
 collection = db.statements
 #import_aep(collection)
 #import_enrolment(collection)
-import_performance(collection)
+#import_performance(collection)
+import_assmatr(collection)
