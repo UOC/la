@@ -131,12 +131,12 @@ app.use(express.static(__dirname + '/node_modules/highlight.js/styles'));
 
 var store = new MongoStore({
     db: db.dbName,
-    auto_reconnect: true,
+    autoReconnect: true,
     host: db.dbHost,
     expireAfter: 3600000*24*2,
     clear_interval: 3600
 }, function(ret){
-
+console.log(ret);
     // START THE SERVER -- WAIT FOR DB CONNECTION
     // =============================================================================
     /*if (cluster.isMaster) {
