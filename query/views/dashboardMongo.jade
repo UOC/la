@@ -8,10 +8,6 @@ block head
   //-link(rel='stylesheet', href='https://highlightjs.org/static/styles/solarized_light.css')
   link(rel='stylesheet', href='https://highlightjs.org/static/styles/github.css')
   //-link(rel='stylesheet', href='https://highlightjs.org/static/styles/monokai_sublime.css')
-  script(type='text/javascript').
-    $(document).ready(function() {
-      loadTables();
-    });
   
 block content
   div.row
@@ -20,12 +16,12 @@ block content
     div(class="bottom-aligned-text col-md-3 text-right")
       button(type="button", id="consolidate_data_all", class="btn btn-primary", aria-label="Consolidate All Data")
         span(class="glyphicon glyphicon-floppy-disk", aria-hidden="true") &nbsp;Consolidate All Data
-    div(class="bottom-aligned-text col-md-3")
-      //-button(type="button", id="consolidate_data", class="btn btn-primary", aria-label="Consolidate Selected Table")
-        //-span(class="glyphicon glyphicon-floppy-disk", aria-hidden="true") &nbsp;Consolidate Selected Collection
+    div(class="bottom-aligned-text col-md-4")
+      button(type="button", id="consolidate_data", class="btn btn-primary", aria-label="Consolidate Selected Collection")
+        span(class="glyphicon glyphicon-floppy-disk", aria-hidden="true") &nbsp;Consolidate Selected Collection
     div(class="bottom-aligned-text col-md-1 text-right")
-      button(type="button", id="go_to_mongo", class="btn btn-warning", aria-label="Go to Mongo")
-        span(class="glyphicon glyphicon-remove-circle", aria-hidden="true") &nbsp;Mongo
+      button(type="button", id="go_to_dashboard", class="btn btn-warning", aria-label="Go to Dashboard")
+        span(class="glyphicon glyphicon-remove-circle", aria-hidden="true") &nbsp;Dashboard
     div(class="bottom-aligned-text col-md-1 text-right")
       button(type="button", id="logout", class="btn btn-danger", aria-label="Close session")
         span(class="glyphicon glyphicon-remove-circle", aria-hidden="true") &nbsp;Logout
@@ -41,9 +37,11 @@ block content
     div.row
       div.col-md-2
         div(class="form-group") 
-          select(name="table", id="tables", class="form-control")
+          select(name="collection", id="collection", class="form-control")
+            each item in collections
+              option(value="#{item}") #{item}
             
-          span.help-block Select table
+          span.help-block Select collection
       div.col-md-4
         div(class="form-group") 
           input(type="text", name="query", id="query", class="form-control")

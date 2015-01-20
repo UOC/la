@@ -35,8 +35,24 @@ module.exports = function (router, passport) {
 
     // Render the dashboard page.
     router.get('/dashboard', helper.isAuthenticated, function (req, res) {
+      res.render('dashboard', {title: 'Dashboard', user: req.user, 'collections': []});
+    });
+
+    router.get('listTables', function (req, res) {
+      var dynamodb = new helper.getDynamoAws();
+      dynamodb.listTables(function(err, data) {
+        if (!err) {
+          res.status(200).json(data.TableNames);    
+        } else {
+          res.status(500).json(err);
+        }
+      });
+    });
+
+    // Render the dashboard page.
+    router.get('/dashboardMongo', helper.isAuthenticated, function (req, res) {
       var collections = require('../config/settings').collections; 
-      res.render('dashboard', {title: 'Dashboard', user: req.user, 'collections': collections});
+      res.render('dashboardMongo', {title: 'Dashboard Mongo', user: req.user, 'collections': collections});
     });
 
     // Consolidate all data

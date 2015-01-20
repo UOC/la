@@ -13,6 +13,12 @@ $( document ).ready(function() {
   $('#logout').click(function(){
     document.location.href='/logout';
   });
+  $('#go_to_mongo').click(function(){
+    document.location.href='/dashboardMongo';
+  });
+  $('#go_to_dashboard').click(function(){
+    document.location.href='/dashboard';
+  });
   $('#fromNext').click(function(){
     $('#from').val(parseInt($('#from').val(),10)+parseInt($('#limit').val(),10));
     launchQueryLA();
@@ -80,4 +86,44 @@ $( document ).ready(function() {
       });    
 
   }
+  loadTables = function() {
+      $('#result').html("Processing ....");
+      $('#send').prop('disabled', 'disabled');
+      $('#tables')
+          .find('option')
+          .remove()
+          .end()
+      ;
+      var data = {
+        
+      };
+      $.ajax({
+        type: "GET",
+        url: "/listTables"
+      }).done(function( ret ) {
+        if (ret) {
+
+          for (var i = 0; i < ret.length; i++) {
+            console.log(ret[i]);
+            $('#tables')
+                .append('<option value="'+ret[i]+'">'+ret[i]+'</option>')
+            ;
+
+          }
+        }
+        else {
+          console.error("Error getting tables!", ret);
+          $('#result').html("Error getting tables!");
+        }
+
+      })
+      .fail(function() {
+         $('#result').html("Error consildating data!");
+      })
+      .always(function() {
+          $('#send').prop('disabled', '');
+          $('#consolidate_data').prop('disabled', '');
+      });    
+
+  }  
 });
