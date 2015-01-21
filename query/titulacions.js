@@ -153,6 +153,208 @@ titulacions.notes_estudis = function(callback) {
     );
 }
 
+titulacions.supera = function(callback) {
+    
+    db.statements.aggregate([
+        { $match: { "verb.id": "http://la.uoc.edu/verb/performance" }},
+        { $project: {
+            user: {                
+                "edu:uoc:la:user": {
+                    "idp": "$actor.account.name"
+                }
+            },
+            time: {
+                "edu:uoc:la:semester": {
+                    code: "$object.definition.extensions.edu:uoc:la:semester.code"
+                }
+            },
+            service: { $literal: "http://la.uoc.edu/verb/subject/pass" },
+            resource: {
+                "edu:uoc:la:subject": {
+                    code: "$object.definition.extensions.edu:uoc:la:subject.code"
+                },
+                "edu:uoc:la:classroom": {
+                    code: "$object.definition.extensions.edu:uoc:la:classroom.code"
+                }
+            },
+            result: {
+                "edu:uoc:la:subject:accomplishment": {
+                    code: "$object.definition.extensions.edu:uoc:la:subject.evaluation.ac.pass"
+                }
+            }
+        }},
+        { $out: "tupla_supera" }
+    ], function (err, result) {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        console.log(result);
+    });
+}
+
+titulacions.notafinalac = function(callback) {
+    
+    db.statements.aggregate([
+        { $match: { "verb.id": "http://la.uoc.edu/verb/performance" }},
+        { $project: {
+            user: {                
+                "edu:uoc:la:user": {
+                    "idp": "$actor.account.name"
+                }
+            },
+            time: {
+                "edu:uoc:la:semester": {
+                    code: "$object.definition.extensions.edu:uoc:la:semester.code"
+                }
+            },
+            service: { $literal: "http://la.uoc.edu/verb/subject/finalmarkac" },
+            resource: {
+                "edu:uoc:la:subject": {
+                    code: "$object.definition.extensions.edu:uoc:la:subject.code"
+                },
+                "edu:uoc:la:classroom": {
+                    code: "$object.definition.extensions.edu:uoc:la:classroom.code"
+                }
+            },
+            result: {
+                "edu:uoc:la:subject:mark": {
+                    code: "$object.definition.extensions.edu:uoc:la:subject.evaluation.af"
+                }
+            }
+        }},
+        { $out: "tupla_notafinalac" }
+    ], function (err, result) {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        console.log(result);
+    });
+}
+
+titulacions.espresenta = function(callback) {
+    
+    db.statements.aggregate([
+        { $match: { $and: [
+            { "verb.id": "http://la.uoc.edu/verb/performance" },
+            { "object.definition.extensions.edu:uoc:la:subject.evaluation.nf": { $ne: "NP"} }
+        ]}},
+        { $project: {
+            user: {                
+                "edu:uoc:la:user": {
+                    "idp": "$actor.account.name"
+                }
+            },
+            time: {
+                "edu:uoc:la:semester": {
+                    code: "$object.definition.extensions.edu:uoc:la:semester.code"
+                }
+            },
+            service: { $literal: "http://la.uoc.edu/verb/subject/presents" },
+            resource: {
+                "edu:uoc:la:subject": {
+                    code: "$object.definition.extensions.edu:uoc:la:subject.code"
+                },
+                "edu:uoc:la:classroom": {
+                    code: "$object.definition.extensions.edu:uoc:la:classroom.code"
+                }
+            },
+            result: {
+                "edu:uoc:la:subject:presents": true
+            }
+        }},
+        { $out: "tupla_espresenta" }
+    ], function (err, result) {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        console.log(result);
+    });
+}
+
+titulacions.notafinal = function(callback) {
+    
+    db.statements.aggregate([
+        { $match: { "verb.id": "http://la.uoc.edu/verb/performance" }},
+        { $project: {
+            user: {                
+                "edu:uoc:la:user": {
+                    "idp": "$actor.account.name"
+                }
+            },
+            time: {
+                "edu:uoc:la:semester": {
+                    code: "$object.definition.extensions.edu:uoc:la:semester.code"
+                }
+            },
+            service: { $literal: "http://la.uoc.edu/verb/subject/finalmark" },
+            resource: {
+                "edu:uoc:la:subject": {
+                    code: "$object.definition.extensions.edu:uoc:la:subject.code"
+                },
+                "edu:uoc:la:classroom": {
+                    code: "$object.definition.extensions.edu:uoc:la:classroom.code"
+                }
+            },
+            result: {
+                "edu:uoc:la:subject:mark": {
+                    code: "$object.definition.extensions.edu:uoc:la:subject.evaluation.nf"
+                }
+            }
+        }},
+        { $out: "tupla_notafinal" }
+    ], function (err, result) {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        console.log(result);
+    });
+}
+
+titulacions.provarealitzada = function(callback) {
+    
+    db.statements.aggregate([
+        { $match: { "verb.id": "http://la.uoc.edu/verb/performance",
+                    "object.definition.extensions.edu:uoc:la:subject.evaluation.validationTest.qualification": { $not: /^N$/ }}},
+        { $project: {
+            user: {                
+                "edu:uoc:la:user": {
+                    "idp": "$actor.account.name"
+                }
+            },
+            time: {
+                "edu:uoc:la:semester": {
+                    code: "$object.definition.extensions.edu:uoc:la:semester.code"
+                }
+            },
+            service: { $literal: "http://la.uoc.edu/verb/subject/validationtest" },
+            resource: {
+                "edu:uoc:la:subject": {
+                    code: "$object.definition.extensions.edu:uoc:la:subject.code"
+                },
+                "edu:uoc:la:classroom": {
+                    code: "$object.definition.extensions.edu:uoc:la:classroom.code"
+                }
+            },
+            result: {
+                "edu:uoc:la:subject:mark": {
+                    code: "$object.definition.extensions.edu:uoc:la:subject.evaluation.validationTest.qualification"
+                }
+            }
+        }},
+        { $out: "tupla_provarealitzada" }
+    ], function (err, result) {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        console.log(result);
+    });
+}
+
 titulacions.notes_assignatures = function(callback) {
     
     db.statements.mapReduce(
