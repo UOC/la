@@ -133,13 +133,15 @@ var store = new MongoStore({
     db: db.dbName,
     autoReconnect: true,
     host: db.dbHost,
+    w: 1,
     expireAfter: 3600000*24*2,
     clear_interval: 3600
 }, function(ret){
-console.log(ret);
+  console.log(err || 'connect-mongodb setup ok');
+});
     // START THE SERVER -- WAIT FOR DB CONNECTION
     // =============================================================================
-    /*if (cluster.isMaster) {
+    if (cluster.isMaster) {
         var numCPUs = require('os').cpus().length;
         //Fork the workers, one per CPU
         for (var i=0; i< numCPUs; i++) {
@@ -153,7 +155,7 @@ console.log(ret);
        });
 
     } else {
-*/
+
 
         module.exports = app;
 
@@ -168,8 +170,7 @@ console.log(ret);
 		  console.log("%s listening at %s", server.name, server.url);
 		});
 
-  //  }
-});
+    }
 
 
 app.use(session({ 

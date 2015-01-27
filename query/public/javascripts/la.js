@@ -1,14 +1,83 @@
+var lastEvaluatedKey = '';
+var lastEvaluatedKeyPrevious = '';
+var go_forward = true;
+var arrayAdvancedSearch = [];
 $( document ).ready(function() {
 
+  $('#send_advanced').removeClass('hide');
   $('#consolidate_data').click(function(){
     consolidateDataLA($('#collection').val());
   });
   $('#consolidate_data_all').click(function(){
     consolidateDataLA('');
   });
+  $('#tables').change(function(){
+    lastEvaluatedKey = '';
+    $('#advanced_search').html(""); 
+    $('#send_advanced').addClass('hide');
+    if ($('#tables').val()!='') {
+      arrayAdvancedSearch = [];
+      $('#advanced_search').html("Loading data structure"); 
+      $.ajax({
+        type: "GET",
+        url: "/describeTable/"+$('#tables').val()
+      }).done(function( ret ) {
+        if (ret) {
+          $('#send_advanced').removeClass('hide');
+          var search = '';
+          for (var i=0; i<ret.length; i++) {
+            search += '<div class="col-md-2"><div class="form-group"><input type="text" name="'+ret[i].AttributeName+'"  id="'+ret[i].AttributeName+'" /><span class="help-block">'+ret[i].AttributeName+' <i>type: '+ret[i].AttributeType+':</i></span> </div></div>';
+            arrayAdvancedSearch[arrayAdvancedSearch.length] = ret[i].AttributeName;
+          }
+          $('#advanced_search').html(search);          
+        }
+        else {
+          console.error("Error getting tables!", ret);
+          $('#advanced_search').html("Error data structure!");
+        }
+
+      })
+      .fail(function() {
+          $('#advanced_search').html("Error data structure"); 
+      })
+      .always(function() {
+          changeStateButtons(false);
+      });    
+    }
+  });
+
+  $('#sendMongo').click(function(){
+    launchQueryLA();
+  });
+  $('#fromNextMongo').click(function(){
+    $('#fromMongo').val(parseInt($('#fromMongo').val(),10)+parseInt($('#limitMongo').val(),10));
+    launchQueryLA();
+  });
+  $('#fromPreviousMongo').click(function(){
+    var value = parseInt($('#fromMongo').val(),10)-parseInt($('#limitMongo').val(),10);
+    if (value<0) {
+      value = 0;
+    } else {
+      lastEvaluatedKey = lastEvaluatedKeyPrevious;
+    }
+    $('#fromMongo').val(value);
+    launchQueryLA();
+  });
 
   $('#send').click(function(){
-    launchQueryLA();
+    launchQueryDynamoDB();
+  });
+  $('#fromNext').click(function(){
+    $('#from').val(parseInt($('#from').val(),10)+parseInt($('#limit').val(),10));
+    launchQueryDynamoDB();
+  });
+  $('#fromPrevious').click(function(){
+    var value = parseInt($('#from').val(),10)-parseInt($('#limit').val(),10);
+    if (value<0) {
+      value = 0;
+    }
+    $('#from').val(value);
+    launchQueryDynamoDB();
   });
   $('#logout').click(function(){
     document.location.href='/logout';
@@ -19,18 +88,10 @@ $( document ).ready(function() {
   $('#go_to_dashboard').click(function(){
     document.location.href='/dashboard';
   });
-  $('#fromNext').click(function(){
-    $('#from').val(parseInt($('#from').val(),10)+parseInt($('#limit').val(),10));
-    launchQueryLA();
+  $('#reload_tables').click(function(){
+    loadTables();
   });
-  $('#fromPrevious').click(function(){
-    var value = parseInt($('#from').val(),10)+parseInt($('#limit').val(),10);
-    if (value<0) {
-      value = 0;
-    }
-    $('#from').val(value);
-    launchQueryLA();
-  });
+
   launchQueryLA= function() {
     $('#result').html("Loading ....");
       $('#send').prop('disabled', 'disabled');
@@ -43,7 +104,7 @@ $( document ).ready(function() {
         from: $('#from').val(),
         limit: $('#limit').val()
       };
-      $.post( "/dashboard", data, function(ret) {
+      $.post( "/dashboardMongo", data, function(ret) {
         $('#result').html(ret.content);
         /*hljs.highlightBlock($('#result').get(0));*/
 
@@ -86,9 +147,16 @@ $( document ).ready(function() {
       });    
 
   }
+  changeStateButtons = function (disabled) {
+      $('#send').prop('disabled', disabled?'disabled':'');
+      $('#reload_tables').prop('disabled', disabled?'disabled':'');
+      $('#send_advanced').prop('disabled', disabled?'disabled':'');
+    
+  }
+
   loadTables = function() {
       $('#result').html("Processing ....");
-      $('#send').prop('disabled', 'disabled');
+      changeStateButtons(true);
       $('#tables')
           .find('option')
           .remove()
@@ -102,14 +170,17 @@ $( document ).ready(function() {
         url: "/listTables"
       }).done(function( ret ) {
         if (ret) {
+          $('#tables')
+              .append('<option value="">-- Select Table --</option>')
+          ;
 
           for (var i = 0; i < ret.length; i++) {
-            console.log(ret[i]);
             $('#tables')
                 .append('<option value="'+ret[i]+'">'+ret[i]+'</option>')
             ;
 
           }
+          $('#result').html("Data loaded successfully");
         }
         else {
           console.error("Error getting tables!", ret);
@@ -121,9 +192,75 @@ $( document ).ready(function() {
          $('#result').html("Error consildating data!");
       })
       .always(function() {
-          $('#send').prop('disabled', '');
-          $('#consolidate_data').prop('disabled', '');
+          changeStateButtons(false);
       });    
 
   }  
+  launchQueryDynamoDB= function() {
+    if ($('#tables').val()=='') {
+      alert("You have to select a table");
+    } else {
+      $('#result').html("Loading ....");
+        changeStateButtons(true);
+        var data = {
+          tableName: $('#tables').val(),
+          query: $('#query').val(),
+          sort: $('#sort').val(),
+          sort_order: $('#sort_order').val(),
+          lastEvaluatedKey: lastEvaluatedKey,
+          go_forward: go_forward,
+          limit: $('#limit').val()
+        };
+        $.post( "/dashboard", data, function(ret) {
+          var str = '';
+          for (var i=0; i<ret.Items.length; i++) {
+            var resource = '{';
+            if (ret.Items[i]['resource'].S) {
+              resource += 'code:'+ret.Items[i]['resource'].S;
+            }
+            else  {
+              if (ret.Items[i]['resource'].M.code) {
+                resource += (resource!='{'?', ':'')+'code:'+ret.Items[i]['resource'].M.code.S;
+              }
+              if (ret.Items[i]['resource'].M.credits) {
+                resource += (resource!='{'?', ':'')+'credits:'+ret.Items[i]['resource'].M.credits.N;
+              } 
+              if (ret.Items[i]['resource'].M.classroom) {
+                resource += (resource!='{'?', ':'')+'classroom:'+ret.Items[i]['resource'].M.classroom.S;
+              }
+              if (ret.Items[i]['resource'].M.subject) {
+                resource += (resource!='{'?', ':'')+'subject:'+ret.Items[i]['resource'].M.subject.S;
+              }
+            }
+            resource += '}';
+            var result = '{';
+            if (ret.Items[i]['result'].S) {
+              result += ret.Items[i]['result'].S;
+            }
+            result += '}';
+            str += 'objectId:'+ ret.Items[i]['objectId'].S+", "+
+                  'time:'+ ret.Items[i]['time'].S+", "+
+                  'service:'+ ret.Items[i]['service'].S+", "+
+                  'resource:'+ resource+", "+
+                  'result:'+ result+"<br>"
+                  ;
+            lastEvaluatedKeyPrevious = lastEvaluatedKey;
+            lastEvaluatedKey = ret.LastEvaluatedKey;
+          }
+          $('#result').html(str);
+          hljs.highlightBlock($('#result').get(0));
+
+        })
+        .fail(function(err) {
+          var error_msg = "Undefined error";
+          if (err.responseJSON && err.responseJSON.code && err.responseJSON.message) {
+            error_msg = err.responseJSON.message;
+          }
+          alert(error_msg);
+        })
+        .always(function() {
+            changeStateButtons(false);
+        });    
+      }
+  }
 });

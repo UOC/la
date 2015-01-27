@@ -11,15 +11,15 @@ block head
   
 block content
   div.row
-    div.col-md-4
+    div.col-md-3
       h1= title
     div(class="bottom-aligned-text col-md-3 text-right")
       button(type="button", id="consolidate_data_all", class="btn btn-primary", aria-label="Consolidate All Data")
         span(class="glyphicon glyphicon-floppy-disk", aria-hidden="true") &nbsp;Consolidate All Data
-    div(class="bottom-aligned-text col-md-4")
+    div(class="bottom-aligned-text col-md-3")
       button(type="button", id="consolidate_data", class="btn btn-primary", aria-label="Consolidate Selected Collection")
         span(class="glyphicon glyphicon-floppy-disk", aria-hidden="true") &nbsp;Consolidate Selected Collection
-    div(class="bottom-aligned-text col-md-1 text-right")
+    div(class="bottom-aligned-text col-md-2")
       button(type="button", id="go_to_dashboard", class="btn btn-warning", aria-label="Go to Dashboard")
         span(class="glyphicon glyphicon-remove-circle", aria-hidden="true") &nbsp;Dashboard
     div(class="bottom-aligned-text col-md-1 text-right")
@@ -60,19 +60,19 @@ block content
         div(class="form-group") 
           div.row
             div.col-md-2
-              span(class="glyphicon glyphicon-chevron-left", aria-hidden="true", id="fromPrevious") 
+              span(class="glyphicon glyphicon-chevron-left", aria-hidden="true", id="fromPreviousMongo") 
             div.col-md-6
-              input(type="text", name="from", id="from", class="form-control", value="0")
+              input(type="text", name="fromMongo", id="fromMongo", class="form-control", value="0")
               span.help-block From
             div.col-md-4
-              span(class="glyphicon glyphicon-chevron-right", aria-hidden="true", id="fromNext") 
+              span(class="glyphicon glyphicon-chevron-right", aria-hidden="true", id="fromNextMongo") 
       div.col-md-1
         div(class="form-group") 
-          input(type="text", name="limit", id="limit", class="form-control", value="50")
+          input(type="text", name="limitMongo", id="limitMongo", class="form-control", value="50")
           span.help-block Limit
       div.col-md-1
         div(class="form-group") 
-          input(type="button", id="send", value="send", class="btn btn-warning")
+          input(type="button", id="sendMongo", value="sendMongo", class="btn btn-warning")
     div.row
       div.col-md-6
         div(id="result")  

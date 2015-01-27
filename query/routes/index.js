@@ -37,8 +37,13 @@ module.exports = function (router, passport) {
     router.get('/dashboard', helper.isAuthenticated, function (req, res) {
       res.render('dashboard', {title: 'Dashboard', user: req.user, 'collections': []});
     });
-
-    router.get('listTables', function (req, res) {
+    /**
+     * List tables
+     * @param  {[type]} req [description]
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
+    router.get('/listTables', function (req, res) {
       var dynamodb = new helper.getDynamoAws();
       dynamodb.listTables(function(err, data) {
         if (!err) {
@@ -48,7 +53,180 @@ module.exports = function (router, passport) {
         }
       });
     });
+    /**
+     * Describe table
+     * @param  {[type]} req [description]
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
+    router.get('/describeTable/:tableName', function (req, res) {
+      var dynamodb = new helper.getDynamoAws();
+      var tableName = req.params["tableName"];
+      var params = {
+        TableName: tableName /* required */
+      };
+      dynamodb.describeTable(params, function(err, data) {
+        if (!err) {
+          res.status(200).json(data.Table.AttributeDefinitions);    
+        } else {
+          res.status(500).json(err);
+        }
+      });
+    });
+    // Render the dashboard page.
+    router.post('/dashboard', helper.isAuthenticated, function (req, res) {
 
+      var tableName = (req.body.tableName)?req.body.tableName:'';
+      var query = (req.body.query)?req.body.query:'';
+      //var sort = (req.body.sort)?req.body.sort:'';
+      //var sort_order = parseInt((req.body.sort_order)?req.body.sort_order:0,10);
+
+      var lastEvaluatedKey = (req.body.lastEvaluatedKey)?req.body.lastEvaluatedKey:'';
+      var limit = parseInt((req.body.limit)?req.body.limit:50,10);
+      var dynamodb = new helper.getDynamoAws();
+      var go_forward = req.body.go_forward?req.body.go_forward=='true':true;
+      var params = {
+          TableName: tableName, /* required */
+          /*AttributesToGet: [
+            'STRING_VALUE',
+            
+          ],
+          ConditionalOperator: 'AND | OR',*/
+          /*ExclusiveStartKey: {
+            someKey: { // AttributeValue 
+              B: new Buffer('...') || 'STRING_VALUE',
+              BOOL: true || false,
+              BS: [
+                new Buffer('...') || 'STRING_VALUE',
+                // more items 
+              ],
+              L: [
+                // recursive AttributeValue ,
+                // more items 
+              ],
+              M: {
+                someKey: // recursive AttributeValue ,
+                // anotherKey: ... 
+              },
+              N: 'STRING_VALUE',
+              NS: [
+                'STRING_VALUE',
+                // more items 
+              ],
+              NULL: true || false,
+              S: 'STRING_VALUE',
+              SS: [
+                'STRING_VALUE',
+                // more items 
+              ]
+            },
+            // anotherKey: ... 
+          },*/
+          /*ExpressionAttributeNames: {
+            someKey: 'STRING_VALUE',
+            // anotherKey: ... 
+          },
+          ExpressionAttributeValues: {
+            someKey: { // AttributeValue 
+              B: new Buffer('...') || 'STRING_VALUE',
+              BOOL: true || false,
+              BS: [
+                new Buffer('...') || 'STRING_VALUE',
+                // more items 
+              ],
+              L: [
+                // recursive AttributeValue ;
+                // more items 
+              ],
+              M: {
+                someKey: /() recursive AttributeValue ,
+                // anotherKey: ... 
+              },
+              N: 'STRING_VALUE',
+              NS: [
+                'STRING_VALUE',
+                // more items 
+              ],
+              NULL: true || false,
+              S: 'STRING_VALUE',
+              SS: [
+                'STRING_VALUE',
+                 //more items 
+              ]
+            },
+            // anotherKey: ... 
+          },
+          FilterExpression: 'STRING_VALUE',*/
+          Limit: limit,
+          /*ProjectionExpression: 'STRING_VALUE',*/
+          ReturnConsumedCapacity: 'TOTAL',//INDEXES | TOTAL | NONE',
+          /*ScanFilter: {
+            someKey: {
+              ComparisonOperator: 'EQ | NE | IN | LE | LT | GE | GT | BETWEEN | NOT_NULL | NULL | CONTAINS | NOT_CONTAINS | BEGINS_WITH', // required 
+              AttributeValueList: [
+                { // AttributeValue 
+                  B: new Buffer('...') || 'STRING_VALUE',
+                  BOOL: true || false,
+                  BS: [
+                    new Buffer('...') || 'STRING_VALUE',
+                    // more items 
+                  ],
+                  L: [
+                    // recursive AttributeValue ,
+                    // more items 
+                  ],
+                  M: {
+                    someKey: // recursive AttributeValue ,
+                    // anotherKey: ... 
+                  },
+                  N: 'STRING_VALUE',
+                  NS: [
+                    'STRING_VALUE',
+                    // more items 
+                  ],
+                  NULL: true || false,
+                  S: 'STRING_VALUE',
+                  SS: [
+                    'STRING_VALUE',
+                    // more items 
+                  ]
+                },
+                // more items 
+              ]
+            },
+            // anotherKey: ... /
+          },*/
+          Segment: 0,
+          Select: 'ALL_ATTRIBUTES',//'ALL_ATTRIBUTES | ALL_PROJECTED_ATTRIBUTES | SPECIFIC_ATTRIBUTES | COUNT',
+          TotalSegments: 4
+        };
+        if (lastEvaluatedKey!='') {
+            params['ExclusiveStartKey'] = lastEvaluatedKey;
+        }
+        console.log(params);
+      dynamodb.scan(params, function(err, data) {
+        
+        if (!err) {
+          /*var array = [];
+          var hljs = require('highlight.js');
+          for(i=0;i<data.Items.length; i++){
+            var code = hljs.highlight('json', data.Items[i]);
+            array[i] = code;
+          }
+          //var code =  data.Items;
+          var result = {
+                content: array
+          };*/
+
+          res.status(200).json(data);
+
+        } else {
+          console.error(err);
+          res.status(500).json(err);
+        }
+      });
+    });
+/**** M O N G O ****/
     // Render the dashboard page.
     router.get('/dashboardMongo', helper.isAuthenticated, function (req, res) {
       var collections = require('../config/settings').collections; 
@@ -106,7 +284,7 @@ module.exports = function (router, passport) {
       }
     });
     // Render the dashboard page.
-    router.post('/dashboard', helper.isAuthenticated, function (req, res) {
+    router.post('/dashboardMongo', helper.isAuthenticated, function (req, res) {
       var hostArray = req.get('host').split(":");
       if (hostArray.length==1) {
         hostArray[1] = 80;
