@@ -1,10 +1,11 @@
 var lastEvaluatedKey = '';
 var lastEvaluatedKeyPrevious = '';
 var go_forward = true;
+var is_advanced_search = false;
 var arrayAdvancedSearch = [];
 $( document ).ready(function() {
 
-  $('#send_advanced').removeClass('hide');
+  $('#send_advanced').addClass('hide');
   $('#consolidate_data').click(function(){
     consolidateDataLA($('#collection').val());
   });
@@ -26,7 +27,7 @@ $( document ).ready(function() {
           $('#send_advanced').removeClass('hide');
           var search = '';
           for (var i=0; i<ret.length; i++) {
-            search += '<div class="col-md-2"><div class="form-group"><input type="text" name="'+ret[i].AttributeName+'"  id="'+ret[i].AttributeName+'" /><span class="help-block">'+ret[i].AttributeName+' <i>type: '+ret[i].AttributeType+':</i></span> </div></div>';
+            search += '<div class="col-md-2"><div class="form-group"><input type="text" name="'+ret[i].AttributeName+'"  id="advanced_search_'+ret[i].AttributeName+'" /><span class="help-block">'+ret[i].AttributeName+' <i>type: '+ret[i].AttributeType+':</i></span> </div></div>';
             arrayAdvancedSearch[arrayAdvancedSearch.length] = ret[i].AttributeName;
           }
           $('#advanced_search').html(search);          
@@ -65,6 +66,11 @@ $( document ).ready(function() {
   });
 
   $('#send').click(function(){
+    is_advanced_search = false;
+    launchQueryDynamoDB();
+  });
+  $('#send_advanced').click(function(){
+    is_advanced_search = true;
     launchQueryDynamoDB();
   });
   $('#fromNext').click(function(){
@@ -209,8 +215,15 @@ $( document ).ready(function() {
           sort_order: $('#sort_order').val(),
           lastEvaluatedKey: lastEvaluatedKey,
           go_forward: go_forward,
+          is_advanced_search: is_advanced_search,
           limit: $('#limit').val()
         };
+        if (is_advanced_search){
+          data['advanced_search'] = [];
+          for (var i=0; i<arrayAdvancedSearch.length; i++) {
+            data['advanced_search'][i] = {id: arrayAdvancedSearch[i], value: $('#advanced_search_'+arrayAdvancedSearch[i]).val()};
+          }
+        }
         $.post( "/dashboard", data, function(ret) {
           var str = '';
           for (var i=0; i<ret.Items.length; i++) {

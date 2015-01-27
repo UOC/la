@@ -85,6 +85,11 @@ module.exports = function (router, passport) {
       var limit = parseInt((req.body.limit)?req.body.limit:50,10);
       var dynamodb = new helper.getDynamoAws();
       var go_forward = req.body.go_forward?req.body.go_forward=='true':true;
+      var is_advanced_search = req.body.is_advanced_search?req.body.is_advanced_search=='true':false;
+      var advanced_search = [];
+      if (is_advanced_search) {
+        advanced_search = req.body.advanced_search?req.body.advanced_search:[];
+      }
       var params = {
           TableName: tableName, /* required */
           /*AttributesToGet: [
@@ -202,6 +207,25 @@ module.exports = function (router, passport) {
         };
         if (lastEvaluatedKey!='') {
             params['ExclusiveStartKey'] = lastEvaluatedKey;
+        }
+        var number_of_conditions = 0;
+        if (is_advanced_search && advanced_search.length>0) {
+          var params_filter = [];
+          for (var i=0; i<advanced_search.length; i++) {
+            if (advanced_search[i].value.length>0) {
+                params_filter[advanced_search[i].id] = {
+                      ComparisonOperator: 'EQ',// | NE | IN | LE | LT | GE | GT | BETWEEN | NOT_NULL | NULL | CONTAINS | NOT_CONTAINS | BEGINS_WITH', // required 
+                      AttributeValueList: [ { // AttributeValue 
+                        S:  advanced_search[i].value,
+                      }]
+                    };
+                    number_of_conditions ++;
+                  }
+            }
+          params['ScanFilter'] = params_filter;
+        }
+        if (number_of_conditions>1) {
+            params['ConditionalOperator'] = 'AND';
         }
         console.log(params);
       dynamodb.scan(params, function(err, data) {
