@@ -31,6 +31,14 @@ Object.keys(settings).forEach(function(key) {
     collections.push(value);
   }
 });
+
+var aws = {
+    credentials: 'learning-analytics',
+    region: 'eu-west-1',
+    apiversion: 'latest'
+};
+
+exports.aws = aws;
 exports.settings = settings;
 exports.db = db;
 exports.collections = collections;

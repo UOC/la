@@ -1,0 +1,78 @@
+extends layout
+#{error}
+block head
+  script(src="/javascripts/la.js")
+  script(src="https://highlightjs.org/static/highlight.pack.js")
+  link(rel='stylesheet', href='https://highlightjs.org/static/styles/default.css')
+  //-link(rel='stylesheet', href='https://highlightjs.org/static/styles/solarized_dark.css')
+  //-link(rel='stylesheet', href='https://highlightjs.org/static/styles/solarized_light.css')
+  link(rel='stylesheet', href='https://highlightjs.org/static/styles/github.css')
+  //-link(rel='stylesheet', href='https://highlightjs.org/static/styles/monokai_sublime.css')
+  
+block content
+  div.row
+    div.col-md-3
+      h1= title
+    div(class="bottom-aligned-text col-md-3 text-right")
+      button(type="button", id="consolidate_data_all", class="btn btn-primary", aria-label="Consolidate All Data")
+        span(class="glyphicon glyphicon-floppy-disk", aria-hidden="true") &nbsp;Consolidate All Data
+    div(class="bottom-aligned-text col-md-3")
+      button(type="button", id="consolidate_data", class="btn btn-primary", aria-label="Consolidate Selected Collection")
+        span(class="glyphicon glyphicon-floppy-disk", aria-hidden="true") &nbsp;Consolidate Selected Collection
+    div(class="bottom-aligned-text col-md-2")
+      button(type="button", id="go_to_dashboard", class="btn btn-warning", aria-label="Go to Dashboard")
+        span(class="glyphicon glyphicon-remove-circle", aria-hidden="true") &nbsp;Dashboard
+    div(class="bottom-aligned-text col-md-1 text-right")
+      button(type="button", id="logout", class="btn btn-danger", aria-label="Close session")
+        span(class="glyphicon glyphicon-remove-circle", aria-hidden="true") &nbsp;Logout
+
+  if (typeof message !== "undefined")
+    div(class="alert alert-danger") #{message}
+  if user
+    div.welcomebox
+      // Filtered inline output
+      p.
+        Welcome, #{user.name}
+  form(name="query", action="", method="post")
+    div.row
+      div.col-md-2
+        div(class="form-group") 
+          select(name="collection", id="collection", class="form-control")
+            each item in collections
+              option(value="#{item}") #{item}
+            
+          span.help-block Select collection
+      div.col-md-4
+        div(class="form-group") 
+          input(type="text", name="query", id="query", class="form-control")
+          span.help-block Set the query
+      div.col-md-1
+        div(class="form-group") 
+          input(type="text", name="sort", id="sort", class="form-control")
+          span.help-block Sort
+      div.col-md-1
+        div(class="form-group") 
+          select(name="sort_order", id="sort_order", class="form-control")
+            option(value="1") Asc
+            option(value="-1") Desc
+          span.help-block Order
+      div.col-md-2
+        div(class="form-group") 
+          div.row
+            div.col-md-2
+              span(class="glyphicon glyphicon-chevron-left", aria-hidden="true", id="fromPreviousMongo") 
+            div.col-md-6
+              input(type="text", name="fromMongo", id="fromMongo", class="form-control", value="0")
+              span.help-block From
+            div.col-md-4
+              span(class="glyphicon glyphicon-chevron-right", aria-hidden="true", id="fromNextMongo") 
+      div.col-md-1
+        div(class="form-group") 
+          input(type="text", name="limitMongo", id="limitMongo", class="form-control", value="50")
+          span.help-block Limit
+      div.col-md-1
+        div(class="form-group") 
+          input(type="button", id="sendMongo", value="sendMongo", class="btn btn-warning")
+    div.row
+      div.col-md-6
+        div(id="result")  
