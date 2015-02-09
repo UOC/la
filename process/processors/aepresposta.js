@@ -1,6 +1,10 @@
 var mongojs = require('mongojs');
 var config = require('../config/settings').settings;
 var db = mongojs(config.db_connection_url, [config.source_collection]);
+var initialBlock = 0;
+if (config.aepresposta && config.aepresposta.initialBlock) {
+  initialBlock = config.login.initialBlock;
+}
 
 var aep = {};
 aep.execute = function(AWS) {
@@ -99,7 +103,7 @@ aep.execute = function(AWS) {
     };
 
     // initial call
-    update(0);
+    update(initialBlock);
 
   });
 };

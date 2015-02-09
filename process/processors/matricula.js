@@ -1,6 +1,6 @@
 var mongojs = require('mongojs');
 var config = require('../config/settings').settings;
-var db = mongojs(config.db_connection_url, [config.source_collection]);
+var db = mongojs(config.db_connection_url, [config.source_collection, config.collection_enrollment_by_user_and_subject]);
 
 var initialBlock = 0;
 if (config.matricula && config.matricula.initialBlock) {
@@ -8,11 +8,44 @@ if (config.matricula && config.matricula.initialBlock) {
 }
 
 var matricula = {};
+matricula.prepare = function(callback, errorCallback) {
+  var collection = eval('db.'+config.source_collection);
+
+  collection.count({}, function(err, total) {
+    if (err) {
+      errorCallback(err);
+      return;
+    }
+    if (total > 0) {
+      callback(total);
+    } else {
+      /*
+       * This is the API call, but allowDiskUse doesn't propagate to mongo,
+       * so we use the generic runCommand method
+          collection.aggregate([
+          { $match: { "verb.id": "http://la.uoc.edu/verb/subject/enrolment", "object.definition.extensions.edu:uoc:la:subject.code": {$ne: ""}}},
+          { $out: "matricula_per_usuaris_i_aules" }
+          ])
+      */
+      collection.runCommand("aggregate", {pipeline:[
+          { $match: { "verb.id": "http://la.uoc.edu/verb/subject/enrolment", "object.definition.extensions.edu:uoc:la:subject.code": {$ne: ""}}},
+          { $out: "matricula_per_usuaris_i_aules" }
+          ], allowDiskUse:true
+      }, function(err, res) {
+        if (err && errorCallback) errorCallback(err);
+        if (!err && callback) callback(res);
+      });
+    }
+  });
+};
+
+
 matricula.execute = function(AWS) {
   console.log('Starting process...');
+  matricula.prepare(function() {
     var pageNumber = 25;
-    var collection = eval('db.'+config.source_collection);
-    var query = { "verb.id": "http://la.uoc.edu/verb/subject/enrolment", "object.definition.extensions.edu:uoc:la:subject.code": {$ne: ""}};
+    var collection = eval('db.'+config.collection_enrollment_by_user_and_subject);
+    var query = {};
     collection.count(query, function(err, total) {
       if (err) {
         console.log(err);
@@ -36,7 +69,9 @@ matricula.execute = function(AWS) {
           };
           params.RequestItems[config.dinamo_table_name] = [];
           var skip = blockIndex === 0 ? 0 : blockIndex * pageNumber;
-          collection.find(query).sort({"_id": 1}).limit(pageNumber).skip(skip).forEach(function(err, doc) {
+          collection.find(query).sort({"_id": 1}).skip(skip).limit(pageNumber).forEach(function(err, doc) {
+
+
             if (err) console.log(err);
             if (doc != null) {
               // create document in dinamo
@@ -88,6 +123,8 @@ matricula.execute = function(AWS) {
                 }, 10);
               }
             }
+
+
           });
         }
       };
@@ -105,9 +142,13 @@ matricula.execute = function(AWS) {
       };
 
       // initial call
-      update(0);
+      update(initialBlock);
 
     });
+  }, function(err) {
+    // error
+    console.log(err);
+  });
 };
 
 module.exports = matricula;

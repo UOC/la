@@ -62,7 +62,7 @@ matriculat.execute = function(AWS) {
         params.RequestItems[config.dinamo_table_name] = [];
         var skip = blockIndex === 0 ? 0 : blockIndex * pageNumber;
 
-        collection.find().sort({"_id": 1}).limit(pageNumber).skip(skip).forEach(function(err, doc) {
+        collection.find().sort({"_id": 1}).skip(skip).limit(pageNumber).forEach(function(err, doc) {
           if (err) console.log(err);
           if (doc != null) {
 
