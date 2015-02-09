@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "mongojs": "latest",
-    "aws-sdk": "latest"
+    "aws-sdk": "latest",
+    "async": "latest"
   }
 }
