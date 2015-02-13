@@ -3,9 +3,11 @@ var lastEvaluatedKeyPrevious = '';
 var go_forward = true;
 var is_advanced_search = false;
 var arrayAdvancedSearch = [];
+var arrayAdvancedSearchKey = [];
 $( document ).ready(function() {
 
   $('#send_advanced').addClass('hide');
+  $('#use_advanced_search').addClass('hide');
   $('#consolidate_data').click(function(){
     consolidateDataLA($('#collection').val());
   });
@@ -18,6 +20,7 @@ $( document ).ready(function() {
     $('#send_advanced').addClass('hide');
     if ($('#tables').val()!='') {
       arrayAdvancedSearch = [];
+      arrayAdvancedSearchKey = [];
       $('#advanced_search').html("Loading data structure"); 
       $.ajax({
         type: "GET",
@@ -25,10 +28,14 @@ $( document ).ready(function() {
       }).done(function( ret ) {
         if (ret) {
           $('#send_advanced').removeClass('hide');
+          $('#use_advanced_search').removeClass('hide');
           var search = '';
           for (var i=0; i<ret.length; i++) {
             search += '<div class="col-md-2"><div class="form-group"><input type="text" name="'+ret[i].AttributeName+'"  id="advanced_search_'+ret[i].AttributeName+'" /><span class="help-block">'+ret[i].AttributeName+' <i>type: '+ret[i].AttributeType+':</i></span> </div></div>';
             arrayAdvancedSearch[arrayAdvancedSearch.length] = ret[i].AttributeName;
+            if (ret[i].isKey) {
+              arrayAdvancedSearchKey[arrayAdvancedSearchKey.length] = ret[i].AttributeName;
+            }
           }
           $('#advanced_search').html(search);          
         }
@@ -67,10 +74,14 @@ $( document ).ready(function() {
 
   $('#send').click(function(){
     is_advanced_search = false;
+    $('#from').val(0);
+    lastEvaluatedKey = '';
     launchQueryDynamoDB();
   });
   $('#send_advanced').click(function(){
     is_advanced_search = true;
+    $('#from').val(0);
+    lastEvaluatedKey = '';
     launchQueryDynamoDB();
   });
   $('#fromNext').click(function(){
@@ -216,6 +227,7 @@ $( document ).ready(function() {
           lastEvaluatedKey: lastEvaluatedKey,
           go_forward: go_forward,
           is_advanced_search: is_advanced_search,
+          operation: $('input[name=queryOperations]:checked').val(),
           limit: $('#limit').val()
         };
         if (is_advanced_search){
@@ -228,33 +240,57 @@ $( document ).ready(function() {
           var str = '';
           for (var i=0; i<ret.Items.length; i++) {
             var resource = '{';
-            if (ret.Items[i]['resource'].S) {
+            if (ret.Items[i]['resource'] && ret.Items[i]['resource'].S) {
               resource += 'code:'+ret.Items[i]['resource'].S;
             }
             else  {
-              if (ret.Items[i]['resource'].M.code) {
-                resource += (resource!='{'?', ':'')+'code:'+ret.Items[i]['resource'].M.code.S;
-              }
-              if (ret.Items[i]['resource'].M.credits) {
-                resource += (resource!='{'?', ':'')+'credits:'+ret.Items[i]['resource'].M.credits.N;
-              } 
-              if (ret.Items[i]['resource'].M.classroom) {
-                resource += (resource!='{'?', ':'')+'classroom:'+ret.Items[i]['resource'].M.classroom.S;
-              }
-              if (ret.Items[i]['resource'].M.subject) {
-                resource += (resource!='{'?', ':'')+'subject:'+ret.Items[i]['resource'].M.subject.S;
+              if (ret.Items[i]['resource'] && ret.Items[i]['resource'].M) {
+                if (ret.Items[i]['resource'].M.code) {
+                  resource += (resource!='{'?', ':'')+'code:'+ret.Items[i]['resource'].M.code.S;
+                }
+                if (ret.Items[i]['resource'].M.credits) {
+                  resource += (resource!='{'?', ':'')+'credits:'+ret.Items[i]['resource'].M.credits.N;
+                } 
+                if (ret.Items[i]['resource'].M.classroom) {
+                  resource += (resource!='{'?', ':'')+'classroom:'+ret.Items[i]['resource'].M.classroom.S;
+                }
+                if (ret.Items[i]['resource'].M.subject) {
+                  resource += (resource!='{'?', ':'')+'subject:'+ret.Items[i]['resource'].M.subject.S;
+                }
               }
             }
             resource += '}';
+            if (resource=='{}') {
+              resource = '';
+            }
             var result = '{';
-            if (ret.Items[i]['result'].S) {
-              result += ret.Items[i]['result'].S;
+            if (ret.Items[i]['result']) {
+              if (ret.Items[i]['result'].S) {
+                result += ret.Items[i]['result'].S;
+              }
+              if (ret.Items[i]['result'].N) {
+                result += ret.Items[i]['result'].N;
+              }
+            }
+            if (ret.Items[i]['passed']) {
+              result += ',passed:'+ret.Items[i]['passed'].N;
+            }
+            if (ret.Items[i]['failed']) {
+              result += ',failed:'+ret.Items[i]['failed'].N;
+            }
+            if (ret.Items[i]['total']) {
+              result += ',total:'+ret.Items[i]['total'].N;
             }
             result += '}';
-            str += 'objectId:'+ ret.Items[i]['objectId'].S+", "+
-                  'time:'+ ret.Items[i]['time'].S+", "+
-                  'service:'+ ret.Items[i]['service'].S+", "+
-                  'resource:'+ resource+", "+
+            var subject = ret.Items[i]['subject']?ret.Items[i]['subject'].S:'';
+            var user = ret.Items[i]['user']?ret.Items[i]['user'].S:'';
+            var time = ret.Items[i]['time']?ret.Items[i]['time'].S:ret.Items[i]['semester'].S;
+            str += //'objectId:'+ ret.Items[i]['objectId'].S+", "+
+                  'time:'+ time+", "+
+                  (ret.Items[i]['service']?'service:'+ ret.Items[i]['service'].S+", ":"")+
+                  (resource.length>0?('resource:'+ resource+", "):"")+
+                  (user.length>0?('user:'+ user+", "):"")+
+                  (subject.length>0?('subject:'+ subject+", "):"")+
                   'result:'+ result+"<br>"
                   ;
             lastEvaluatedKeyPrevious = lastEvaluatedKey;

@@ -76,6 +76,12 @@ block content
     div.row
       div.col-md-11
         div(id="advanced_search", class="row")  
+        div(id="use_advanced_search", class="row")  
+          span.gwt-RadioButton
+            span Scan
+              input(type="radio", name="queryOperations", value="scan", id="scan_option", checked="checked")
+            span Query
+              input(type="radio", name="queryOperations", value="query", id="query_option")
       div.col-md-1
         div(class="form-group") 
           input(type="button", id="send_advanced", value="send", class="btn btn-warning")
