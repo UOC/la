@@ -3,3 +3,4 @@ import/data
 query/.idea
 query/config/lrs.js
 query/node_modules
+process/node_modules

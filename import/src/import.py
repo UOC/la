@@ -2,6 +2,7 @@ import csv
 import uuid
 import datetime
 import json
+import sys
 
 from pymongo import Connection
 from tincan import (
@@ -231,6 +232,59 @@ def create_Performance_statement(row):
 
 """
 """
+def create_login_logout_statement(row):
+
+    print(row)
+    if len(row) == 5:
+        userid, login, logout, ip, lastaction = row
+    else:
+        return json.loads("{}")
+
+    try:
+        logintime = datetime.datetime.strptime(login, "%d%m%Y%H%M%S").isoformat()
+        logouttime = datetime.datetime.strptime(logout, "%d%m%Y%H%M%S").isoformat()
+        lastactiontime = datetime.datetime.strptime(lastaction, "%d%m%Y%H%M%S").isoformat()
+    except ValueError:
+        logintime = ''
+        logouttime = ''
+        lastactiontime = ''
+
+    statement = Statement({
+	    'actor': Agent({
+	    	'account': AgentAccount({
+	    		'name': userid,
+	    	}),
+	    }),
+	    'verb': Verb({
+		    'id': 'http://la.uoc.edu/verb/login',
+		    'display': LanguageMap({'en-US': 'Login'}),
+		}),
+	    'object': Activity({
+	    	'id': 'http://la.uoc.edu/object/login',
+			'definition': ActivityDefinition({
+				'extensions': Extensions({
+					'edu:uoc:la:campus': {
+                      'userid': userid,
+					},
+					'edu:uoc:la:login': {
+                      'login':  logintime,
+                      'logout':  logouttime,
+                      'lastactiontime':  lastactiontime,
+                    },
+				})
+			})
+	    }),
+	    'result': Result({
+	    }),
+	    'timestamp': datetime.datetime.utcnow(),
+		'context': Context({
+		    'registration': uuid.uuid4(),
+		})
+	})
+    return json.loads(statement.to_json())
+
+"""
+"""
 def import_aep(collection):
 	with open('data/Dataset_Graus_2008-09_20141_Assig_Conv_Adap_AEP.csv', 'rb') as csvfile:
 		reader = csv.reader(csvfile, delimiter=';', quotechar='"')
@@ -260,13 +314,24 @@ def import_assmatr(collection):
         reader = csv.reader(csvfile, delimiter=';', quotechar='"')
         next(reader, None)
         collection.insert([create_ass_matr_statement(row) for row in reader])
+"""
+"""
+def import_login_logout(collection):
+    with open('data/loginhistory.csv', 'rU') as csvfile:
+        reader = csv.reader(csvfile, delimiter=';', quotechar='"')
+        next(reader, None)
+        for row in reader:
+            collection.insert(create_login_logout_statement(row))
 
 """
 """
+csv.field_size_limit(sys.maxsize)
+
 connection = Connection('localhost', 27017)
 db = connection.lrs
 collection = db.statements
 #import_aep(collection)
 #import_enrolment(collection)
 #import_performance(collection)
-import_assmatr(collection)
+#import_assmatr(collection)
+import_login_logout(collection)
