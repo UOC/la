@@ -14,7 +14,7 @@ people.updateId = function() {
           var userId = (doc.campusInfo && doc.campusInfo.userId) ? doc.campusInfo.userId : "0";
           var idp = doc._id;
           console.log('Updating document', userId, idp);
-          collection.update({_id: ipd}, {$set: {hash: md5(userId + idp)}});
+          collection.update({_id: idp}, {$set: {hash: md5(userId + idp)}});
         }
     });
 };
