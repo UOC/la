@@ -22,6 +22,7 @@
     "mongodb": "1.2.x",
     "i18next": "latest",
     "tincanjs": "latest",
-    "aws-sdk": "latest"
+    "aws-sdk": "latest",
+    "MD5": "latest"
   }
 }
