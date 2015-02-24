@@ -1,0 +1,1 @@
+mongoexport --db statements_aula --collection lrs --out lrs.json --limit 10000
