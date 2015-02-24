@@ -19,8 +19,8 @@ var settings = {
     destination_collection_enrolment_by_degree_and_semester: 'matricula_per_titulacions_i_semestres',
     destination_collection_by_classroom_tool: 'accessos_eines',
     destination_collection_by_classroom_resource: 'accessos_recursos',
-    destination_collection_by_classroom: 'accessos_aules'
-
+    destination_collection_by_classroom: 'accessos_aules',
+    source_collection_people: 'people'
 };
 
 

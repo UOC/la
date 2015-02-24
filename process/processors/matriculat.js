@@ -2,6 +2,11 @@ var mongojs = require('mongojs');
 var config = require('../config/settings').settings;
 var db = mongojs(config.db_connection_url, [config.source_collection]);
 
+var initialBlock = 0;
+if (config.matriculat && config.matriculat.initialBlock) {
+  initialBlock = config.matriculat.initialBlock;
+}
+
 var matriculat = {};
 matriculat.execute = function(AWS) {
   console.log('Starting process...');
@@ -16,6 +21,8 @@ matriculat.execute = function(AWS) {
       return;
     }
 
+    console.log('Importing ', total, '...');
+
     var updateBlock = function(blockIndex, callback) {
       var dynamodb = new AWS.DynamoDB();
       var params = {
@@ -25,8 +32,8 @@ matriculat.execute = function(AWS) {
         ReturnItemCollectionMetrics: 'SIZE'
       };
       params.RequestItems[config.dinamo_table_name] = [];
-
-      db.statements.find(query).sort({"actor.account.name": 1}).limit(pageNumber).skip(blockIndex).forEach(function(err, doc) {
+      var skip = blockIndex === 0 ? 0 : blockIndex * pageNumber;
+      db.statements.find(query).sort({"actor.account.name": 1}).limit(pageNumber).skip(skip).forEach(function(err, doc) {
         if (err) console.log(err);
         if (doc != null) {
 
@@ -93,7 +100,7 @@ matriculat.execute = function(AWS) {
     };
 
     // initial call
-    update(0);
+    update(initialBlock);
 
   });
 };

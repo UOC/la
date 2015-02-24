@@ -67,7 +67,17 @@ module.exports = function (router, passport) {
       };
       dynamodb.describeTable(params, function(err, data) {
         if (!err) {
-          res.status(200).json(data.Table.AttributeDefinitions);    
+          var ret = data.Table.AttributeDefinitions;
+          if (data.Table.KeySchema) {
+            for(var i=0; i<data.Table.KeySchema.length; i++) {
+              for (var j=0; j<ret.length; j++) {
+                if (ret[j].AttributeName==data.Table.KeySchema[i]){
+                  ret[j].isKey = true;
+                }
+              }
+            }
+          }
+          res.status(200).json(ret);
         } else {
           res.status(500).json(err);
         }
@@ -86,124 +96,63 @@ module.exports = function (router, passport) {
       var dynamodb = new helper.getDynamoAws();
       var go_forward = req.body.go_forward?req.body.go_forward=='true':true;
       var is_advanced_search = req.body.is_advanced_search?req.body.is_advanced_search=='true':false;
-      var advanced_search = [];
-      if (is_advanced_search) {
-        advanced_search = req.body.advanced_search?req.body.advanced_search:[];
-      }
-      var params = {
+      var params = {};
+      var advanced_search = is_advanced_search && req.body.advanced_search?req.body.advanced_search:[];
+      var use_query = req.body.operation?req.body.operation=='query':false;
+      if (is_advanced_search && advanced_search.length>0 && use_query) {
+        //using query
+
+        params = {
           TableName: tableName, /* required */
-          /*AttributesToGet: [
-            'STRING_VALUE',
-            
-          ],
-          ConditionalOperator: 'AND | OR',*/
-          /*ExclusiveStartKey: {
-            someKey: { // AttributeValue 
-              B: new Buffer('...') || 'STRING_VALUE',
-              BOOL: true || false,
-              BS: [
-                new Buffer('...') || 'STRING_VALUE',
-                // more items 
-              ],
-              L: [
-                // recursive AttributeValue ,
-                // more items 
-              ],
-              M: {
-                someKey: // recursive AttributeValue ,
-                // anotherKey: ... 
-              },
-              N: 'STRING_VALUE',
-              NS: [
-                'STRING_VALUE',
-                // more items 
-              ],
-              NULL: true || false,
-              S: 'STRING_VALUE',
-              SS: [
-                'STRING_VALUE',
-                // more items 
-              ]
-            },
-            // anotherKey: ... 
-          },*/
-          /*ExpressionAttributeNames: {
-            someKey: 'STRING_VALUE',
-            // anotherKey: ... 
-          },
-          ExpressionAttributeValues: {
-            someKey: { // AttributeValue 
-              B: new Buffer('...') || 'STRING_VALUE',
-              BOOL: true || false,
-              BS: [
-                new Buffer('...') || 'STRING_VALUE',
-                // more items 
-              ],
-              L: [
-                // recursive AttributeValue ;
-                // more items 
-              ],
-              M: {
-                someKey: /() recursive AttributeValue ,
-                // anotherKey: ... 
-              },
-              N: 'STRING_VALUE',
-              NS: [
-                'STRING_VALUE',
-                // more items 
-              ],
-              NULL: true || false,
-              S: 'STRING_VALUE',
-              SS: [
-                'STRING_VALUE',
-                 //more items 
-              ]
-            },
-            // anotherKey: ... 
-          },
-          FilterExpression: 'STRING_VALUE',*/
+          //ConsistentRead: true, Not supported on secondaty indexes
           Limit: limit,
-          /*ProjectionExpression: 'STRING_VALUE',*/
           ReturnConsumedCapacity: 'TOTAL',//INDEXES | TOTAL | NONE',
-          /*ScanFilter: {
-            someKey: {
-              ComparisonOperator: 'EQ | NE | IN | LE | LT | GE | GT | BETWEEN | NOT_NULL | NULL | CONTAINS | NOT_CONTAINS | BEGINS_WITH', // required 
-              AttributeValueList: [
-                { // AttributeValue 
-                  B: new Buffer('...') || 'STRING_VALUE',
-                  BOOL: true || false,
-                  BS: [
-                    new Buffer('...') || 'STRING_VALUE',
-                    // more items 
-                  ],
-                  L: [
-                    // recursive AttributeValue ,
-                    // more items 
-                  ],
-                  M: {
-                    someKey: // recursive AttributeValue ,
-                    // anotherKey: ... 
-                  },
-                  N: 'STRING_VALUE',
-                  NS: [
-                    'STRING_VALUE',
-                    // more items 
-                  ],
-                  NULL: true || false,
-                  S: 'STRING_VALUE',
-                  SS: [
-                    'STRING_VALUE',
-                    // more items 
-                  ]
-                },
-                // more items 
-              ]
-            },
-            // anotherKey: ... /
-          },*/
+          Select: 'ALL_ATTRIBUTES'//'ALL_ATTRIBUTES | ALL_PROJECTED_ATTRIBUTES | SPECIFIC_ATTRIBUTES | COUNT',
+        };
+        if (lastEvaluatedKey!='') {
+            params['ExclusiveStartKey'] = lastEvaluatedKey;
+        }
+        var number_of_conditions = 0;
+        var params_filter = [];
+        for (var i=0; i<advanced_search.length; i++) {
+          if (advanced_search[i].value.length>0) {
+              params_filter[advanced_search[i].id] = {
+                    ComparisonOperator: 'EQ',// | NE | IN | LE | LT | GE | GT | BETWEEN | NOT_NULL | NULL | CONTAINS | NOT_CONTAINS | BEGINS_WITH', // required 
+                    AttributeValueList: [ { // AttributeValue 
+                      S:  advanced_search[i].value,
+                    }]
+                  };
+                  //console.log("FILTER ",params_filter[advanced_search[i].id]);
+                  number_of_conditions ++;
+                }
+          }
+        params['KeyConditions'] = params_filter;
+        params['IndexName'] = 'user-index';
+
+        if (number_of_conditions>1) {
+            params['ConditionalOperator'] = 'AND';
+        }
+        console.log(params);
+      dynamodb.query(params, function(err, data) {
+        
+        if (!err) {
+          console.log("Returned items "+data.Items.length);
+          console.log("Items ", data.Items);
+          res.status(200).json(data);
+
+        } else {
+          console.error(err);
+          res.status(500).json(err);
+        }
+      });
+    } else {
+      params = {
+          TableName: tableName, /* required */
+          Limit: limit,
+          ReturnConsumedCapacity: 'TOTAL',//INDEXES | TOTAL | NONE',          
           Segment: 0,
           Select: 'ALL_ATTRIBUTES',//'ALL_ATTRIBUTES | ALL_PROJECTED_ATTRIBUTES | SPECIFIC_ATTRIBUTES | COUNT',
-          TotalSegments: 4
+          TotalSegments: 1
         };
         if (lastEvaluatedKey!='') {
             params['ExclusiveStartKey'] = lastEvaluatedKey;
@@ -219,6 +168,7 @@ module.exports = function (router, passport) {
                         S:  advanced_search[i].value,
                       }]
                     };
+                    //console.log("FILTER ",params_filter[advanced_search[i].id]);
                     number_of_conditions ++;
                   }
             }
@@ -227,21 +177,11 @@ module.exports = function (router, passport) {
         if (number_of_conditions>1) {
             params['ConditionalOperator'] = 'AND';
         }
-        console.log(params);
-      dynamodb.scan(params, function(err, data) {
+        dynamodb.scan(params, function(err, data) {
         
         if (!err) {
-          /*var array = [];
-          var hljs = require('highlight.js');
-          for(i=0;i<data.Items.length; i++){
-            var code = hljs.highlight('json', data.Items[i]);
-            array[i] = code;
-          }
-          //var code =  data.Items;
-          var result = {
-                content: array
-          };*/
-
+          console.log("Returned items "+data.Items.length);
+          console.log("Items ", data.Items);
           res.status(200).json(data);
 
         } else {
@@ -249,6 +189,7 @@ module.exports = function (router, passport) {
           res.status(500).json(err);
         }
       });
+     }
     });
 /**** M O N G O ****/
     // Render the dashboard page.
