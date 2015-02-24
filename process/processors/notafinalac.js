@@ -23,7 +23,8 @@ var updateBlock = function(query, blockIndex, callback) {
     params.RequestItems[config.dinamo_table_name] = [];
 
     var skip = blockIndex === 0 ? 0 : blockIndex * pageNumber;
-    collection.find(query).sort({ "actor.account.name": 1 }).limit(pageNumber).skip(skip).forEach(function(err, doc) {
+    //collection.find(query).sort({ "actor.account.name": 1 }).limit(pageNumber).skip(skip).forEach(function(err, doc) {
+    collection.find(query).limit(pageNumber).skip(skip).forEach(function(err, doc) {
 
         if (err) console.log(err);
         if (doc != null) {
@@ -91,7 +92,7 @@ var updateBlock = function(query, blockIndex, callback) {
 
 var query = { "verb.id": "http://la.uoc.edu/verb/performance" };
 
-var initialBlock = 22936;
+var initialBlock = 15524;
 var pageNumber = 25;
 var queueLength = 1;
 

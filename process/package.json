@@ -5,6 +5,8 @@
   "dependencies": {
     "mongojs": "latest",
     "aws-sdk": "latest",
-    "async": "latest"
+    "async": "latest",
+    "JSONStream": "latest",
+    "event-stream": "latest"
   }
 }
