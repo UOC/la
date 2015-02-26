@@ -143,8 +143,6 @@ module.exports = function (router, passport) {
           }
         params['KeyConditions']= params_filter;
 
-
-console.log(params);
       dynamodb.query(params, function(err, data) {
         
         if (!err) {
@@ -193,7 +191,7 @@ console.log(params);
         if (number_of_conditions>1) {
             params['ConditionalOperator'] = 'AND';
         }
-        console.log(params);
+        //console.log(params);
         dynamodb.scan(params, function(err, data) {
         
         if (!err) {

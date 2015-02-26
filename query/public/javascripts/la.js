@@ -41,7 +41,7 @@ $( document ).ready(function() {
           $('#use_advanced_search').removeClass('hide');
           itemsCount = ret.itemCount;
           var tableSizeMb = JsNumberFormatter.formatNumber(Math.round(ret.tableSizeBytes/(1024*1024)*100)/100, jsNumberFormatterOptions, true);
-          var infoTable = "Num Items: "+JsNumberFormatter.formatNumber(itemsCount, jsNumberFormatterOptions, true);+ "<br/>"+
+          var infoTable = "Num Items: "+JsNumberFormatter.formatNumber(itemsCount, jsNumberFormatterOptions, true)+ "<br/>"+
           "Table Size: "+tableSizeMb+" MB";
           $('#info_table').attr('title',infoTable);
           $('#info_table').removeClass('hide');
