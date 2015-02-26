@@ -22,6 +22,9 @@
     "mongodb": "1.2.x",
     "i18next": "latest",
     "tincanjs": "latest",
-    "aws-sdk": "latest"
+    "aws-sdk": "latest",
+    "json2csv": "latest",
+    "mkdirp": "latest",
+    "async": "^0.9.0"
   }
 }
