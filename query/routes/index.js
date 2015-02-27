@@ -364,10 +364,8 @@ module.exports = function (router, passport) {
       var fs = require('fs');
       var tableName = req.params["tableName"];
       var path = 'tmp/export_'+tableName+'.csv';
-      console.log(path);
       fs.exists(path, function(exists) {
         var ret = {};
-        console.log(exists);
         ret.exists = exists;
         if (exists) {
             var stats = fs.statSync(path);
