@@ -1,6 +1,9 @@
 data
 import/data
+lrs/node_modules
+process/node_modules
 query/.idea
 query/config/lrs.js
 query/node_modules
-process/node_modules
+.Rproj.user
+*.log

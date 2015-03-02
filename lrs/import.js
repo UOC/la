@@ -37,7 +37,7 @@ var s = fs.createReadStream(filename)
 var make = function(line, callback) {
     if (!line) return callback();
     var item = transform(JSON.parse(line));
-    items.push(item);
+    if (item) items.push(item);
     if (items.length != bufferSize) return callback();
     consolida.update(items, function(err) {
         err && console.log(err);
@@ -51,6 +51,5 @@ var accesaula = require('./filters/accesaula');
 var acceseina = require('./filters/acceseina');
 
 var transform = function(doc) {
-    return accesaula.transform(doc)
-        || acceseina.transform(doc);
+    return accesaula.transform(doc);
 }

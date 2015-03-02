@@ -1,0 +1,12 @@
+{
+  "name": "la-process",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "mongojs": "latest",
+    "aws-sdk": "latest",
+    "async": "latest",
+    "JSONStream": "latest",
+    "event-stream": "latest"
+  }
+}
