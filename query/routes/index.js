@@ -67,12 +67,17 @@ module.exports = function (router, passport) {
       };
       dynamodb.describeTable(params, function(err, data) {
         if (!err) {
-          var ret = data.Table.AttributeDefinitions;
+          var ret = {};
+          ret.itemCount = data.Table.ItemCount;
+          ret.provisionedThroughput = data.Table.ProvisionedThroughput;
+          ret.tableSizeBytes = data.Table.TableSizeBytes;
+          ret.attributes = data.Table.AttributeDefinitions;
+
           if (data.Table.KeySchema) {
             for(var i=0; i<data.Table.KeySchema.length; i++) {
-              for (var j=0; j<ret.length; j++) {
-                if (ret[j].AttributeName==data.Table.KeySchema[i]){
-                  ret[j].isKey = true;
+              for (var j=0; j<ret.attributes.length; j++) {
+                if (ret.attributes[j].AttributeName==data.Table.KeySchema[i]){
+                  ret.attributes[j].isKey = true;
                 }
               }
             }
@@ -88,11 +93,18 @@ module.exports = function (router, passport) {
 
       var tableName = (req.body.tableName)?req.body.tableName:'';
       var query = (req.body.query)?req.body.query:'';
+      var export_to_csv = (req.body.export_to_csv)?req.body.export_to_csv=='1':false;
+      var itemsCount = (req.body.itemsCount)?req.body.itemsCount:0;
+      //console.log(req.body);
       //var sort = (req.body.sort)?req.body.sort:'';
       //var sort_order = parseInt((req.body.sort_order)?req.body.sort_order:0,10);
 
       var lastEvaluatedKey = (req.body.lastEvaluatedKey)?req.body.lastEvaluatedKey:'';
       var limit = parseInt((req.body.limit)?req.body.limit:50,10);
+      if (export_to_csv) {
+        limit = itemsCount;
+        lastEvaluatedKey = '';
+      }
       var dynamodb = new helper.getDynamoAws();
       var go_forward = req.body.go_forward?req.body.go_forward=='true':true;
       var is_advanced_search = req.body.is_advanced_search?req.body.is_advanced_search=='true':false;
@@ -126,19 +138,21 @@ module.exports = function (router, passport) {
                   number_of_conditions ++;
                 }
           }
-        params['KeyConditions'] = params_filter;
-        params['IndexName'] = 'user-index';
+          if (params_filter.length>1) {
+            params_filter['ConditionalOperator'] = 'AND';
+          }
+        params['KeyConditions']= params_filter;
 
-        if (number_of_conditions>1) {
-            params['ConditionalOperator'] = 'AND';
-        }
-        console.log(params);
       dynamodb.query(params, function(err, data) {
         
         if (!err) {
-          console.log("Returned items "+data.Items.length);
-          console.log("Items ", data.Items);
-          res.status(200).json(data);
+          //console.log("Returned items "+data.Items.length);
+          //console.log("Items ", data.Items);
+          if (export_to_csv) {
+            helper.exportToCSV(data.Items, tableName, res);
+          } else {
+            res.status(200).json(data);
+          }
 
         } else {
           console.error(err);
@@ -177,12 +191,17 @@ module.exports = function (router, passport) {
         if (number_of_conditions>1) {
             params['ConditionalOperator'] = 'AND';
         }
+        //console.log(params);
         dynamodb.scan(params, function(err, data) {
         
         if (!err) {
-          console.log("Returned items "+data.Items.length);
-          console.log("Items ", data.Items);
-          res.status(200).json(data);
+          //console.log("Returned items "+data.Items.length);
+          //console.log("Items ", data.Items);
+          if (export_to_csv) {
+            helper.exportToCSV(data.Items, tableName, res);
+          } else {
+            res.status(200).json(data);
+          }
 
         } else {
           console.error(err);
@@ -274,7 +293,7 @@ module.exports = function (router, passport) {
         url += '&sort='+encodeURIComponent(sort+':'+sort_order);
       }
       //var url = req.protocol + '://' + hostArray[0] + ":" + (hostArray[1]+1) + '/lrs/statements';
-      console.log("Query "+url);
+      //console.log("Query "+url);
       var Client = require('node-rest-client').Client;
 
       var client = new Client();
@@ -341,5 +360,37 @@ module.exports = function (router, passport) {
             res.render('error', { title: 'Error', message: 'User is not authenticated'});
         }
     );
+    router.get('/existCSV/:tableName', function (req, res) {
+      var fs = require('fs');
+      var tableName = req.params["tableName"];
+      var path = 'tmp/export_'+tableName+'.csv';
+      fs.exists(path, function(exists) {
+        var ret = {};
+        ret.exists = exists;
+        if (exists) {
+            var stats = fs.statSync(path);
+            ret.mtime = stats.mtime;
+        }
+        res.status(200).json(ret);
+      });
+      
+    });
+    router.get('/getCSV/:tableName', function (req, res) {
+      var fs = require('fs');
+      var tableName = req.params["tableName"];
+      var path = 'tmp/export_'+tableName+'.csv';
+      fs.exists(path, function(exists) {
+        var ret = {};
+        ret.exists = exists;
+        if (exists) {
+            res.sendfile(path);
+        }
+        else {
+          res.status(500).json('File can not found!');
+        }
+        
+      });
+      
+    });
     
 };
