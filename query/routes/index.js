@@ -226,6 +226,7 @@ module.exports = function (router, passport) {
           ReturnConsumedCapacity: 'TOTAL',//INDEXES | TOTAL | NONE',
           Select: 'ALL_ATTRIBUTES'//'ALL_ATTRIBUTES | ALL_PROJECTED_ATTRIBUTES | SPECIFIC_ATTRIBUTES | COUNT',
       };
+      var number_of_conditions = 0;
 
       var params_filter = [];
       var service_array = service.split(",");
@@ -252,11 +253,12 @@ module.exports = function (router, passport) {
                 number_of_conditions ++;
               }
         }
-        if (params_filter.length>1) {
-          params_filter['ConditionalOperator'] = 'OR';
-          params['KeyConditions']= params_filter;
+        if (number_of_conditions>0) {
+          params['ScanFilter']= params_filter;
+          if (number_of_conditions>1) {
+              params['ConditionalOperator'] = 'AND';
+          }
         }
-  
 
       dynamodb.scan(params, function(err, data) {
         
