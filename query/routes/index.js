@@ -424,53 +424,20 @@ module.exports = function (router, passport) {
             res.render('error', { title: 'Error', message: 'User is not authenticated'});
         }
     );
-/*    router.get('/existCSV/:tableName', helper.isAuthenticated, function (req, res) {
-      var fs = require('fs');
-      var tableName = req.params["tableName"];
-      var path = 'tmp/export_'+tableName+'.csv';
-      fs.exists(path, function(exists) {
-        var ret = {};
-        ret.exists = exists;
-        if (exists) {
-            var stats = fs.statSync(path);
-            ret.mtime = stats.mtime;
-        }
-        res.status(200).json(ret);
-      });
-      
-    });*/
+
     router.get('/existCSV/:tableName', helper.isAuthenticated, function (req, res) {
       var fs = require('fs');
       var tableName = req.params["tableName"];
       helper.getS3FileLastModified(helper.getCsvName(tableName), res);
-      /*
-      var path = 'tmp/export_'+tableName+'.csv';
-      fs.exists(path, function(exists) {
-        var ret = {};
-        ret.exists = exists;
-        if (exists) {
-            var stats = fs.statSync(path);
-            ret.mtime = stats.mtime;
-        }
-        res.status(200).json(ret);
-      });
-      */
     });
     router.get('/getCSV/:tableName', helper.isAuthenticated, function (req, res) {
-      var fs = require('fs');
+      var s3 = helper.getS3Aws();
       var tableName = req.params["tableName"];
-      var path = 'tmp/export_'+tableName+'.csv';
-      fs.exists(path, function(exists) {
-        var ret = {};
-        ret.exists = exists;
-        if (exists) {
-            res.sendfile(path);
-        }
-        else {
-          res.status(500).json('File can not found!');
-        }
-        
-      });
+      var awsConfig = require('../config/settings').aws; 
+      var params = {Bucket: awsConfig.bucketName, Key: awsConfig.s3PathPrefixCsvFiles+helper.getCsvName(tableName)};
+      var url = s3.getSignedUrl('getObject', params);
+            
+      res.redirect(url);
       
     });
     

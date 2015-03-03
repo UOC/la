@@ -264,8 +264,7 @@ $( document ).ready(function() {
               if (ret.exists) {
                 $('#result').html('Do you want to regenerate the exported CSV with generation date '+ret.mtime+'?<br> <button onclick="Javascript:forceToExportCSV();" id="regenerate_csv">Regenerate CSV</button>'
                   +'<br>'
-                  +'or Download <a href="'+ret.filename+'">'+$('#tables').val()+'</a>'); 
-                  //+'or Download <a href="getCSV/'+$('#tables').val()+'">'+$('#tables').val()+'</a>'); 
+                  +'or Download <a href="getCSV/'+$('#tables').val()+'">'+$('#tables').val()+'</a>'); 
               }
               else {
                 forceToExportCSV();
@@ -299,8 +298,7 @@ $( document ).ready(function() {
   getDynamoDBData= function(data, export_to_csv_checkbox) {
         $.post( "/dashboard", data, function(ret) {
           if (export_to_csv_checkbox) {
-            $('#result').html('Download <a href="'+ret.filename+'">'+$('#tables').val()+'</a>');
-            //$('#result').html('Download <a href="getCSV/'+$('#tables').val()+'">'+$('#tables').val()+'</a>');
+            $('#result').html('Download <a href="getCSV/'+$('#tables').val()+'">'+$('#tables').val()+'</a>');
           }
           else {
             var str = '';

@@ -35,7 +35,9 @@ Object.keys(settings).forEach(function(key) {
 var aws = {
     credentials: 'learning-analytics',
     region: 'eu-west-1',
-    apiversion: 'latest'
+    apiversion: 'latest',
+    bucketName: 'YOUR_BUCKET_NAME',
+    s3PathPrefixCsvFiles: 'csv/' //end with Slash "/"
 };
 
 exports.aws = aws;
