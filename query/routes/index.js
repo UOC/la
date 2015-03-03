@@ -424,7 +424,7 @@ module.exports = function (router, passport) {
             res.render('error', { title: 'Error', message: 'User is not authenticated'});
         }
     );
-    router.get('/existCSV/:tableName', function (req, res) {
+/*    router.get('/existCSV/:tableName', helper.isAuthenticated, function (req, res) {
       var fs = require('fs');
       var tableName = req.params["tableName"];
       var path = 'tmp/export_'+tableName+'.csv';
@@ -438,8 +438,25 @@ module.exports = function (router, passport) {
         res.status(200).json(ret);
       });
       
+    });*/
+    router.get('/existCSV/:tableName', helper.isAuthenticated, function (req, res) {
+      var fs = require('fs');
+      var tableName = req.params["tableName"];
+      helper.getS3FileLastModified(helper.getCsvName(tableName), res);
+      /*
+      var path = 'tmp/export_'+tableName+'.csv';
+      fs.exists(path, function(exists) {
+        var ret = {};
+        ret.exists = exists;
+        if (exists) {
+            var stats = fs.statSync(path);
+            ret.mtime = stats.mtime;
+        }
+        res.status(200).json(ret);
+      });
+      */
     });
-    router.get('/getCSV/:tableName', function (req, res) {
+    router.get('/getCSV/:tableName', helper.isAuthenticated, function (req, res) {
       var fs = require('fs');
       var tableName = req.params["tableName"];
       var path = 'tmp/export_'+tableName+'.csv';
