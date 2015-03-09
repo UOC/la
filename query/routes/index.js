@@ -142,7 +142,7 @@ module.exports = function (router, passport) {
             params_filter['ConditionalOperator'] = 'AND';
           }
         params['KeyConditions']= params_filter;
-
+        //console.log(params);
       dynamodb.query(params, function(err, data) {
         
         if (!err) {
@@ -209,6 +209,70 @@ module.exports = function (router, passport) {
         }
       });
      }
+    });
+
+    // Render the dashboard page.
+    router.post('/get_services', function (req, res) {
+
+      var tableName = 'learnginAnalyticsServiceSemester';
+      var service = (req.body.service)?req.body.service:'';
+      var semester = (req.body.semester)?req.body.semester:'';
+      var limit = 0;
+      var dynamodb = new helper.getDynamoAws();
+      var params = {
+          TableName: tableName, /* required */
+          //ConsistentRead: true, Not supported on secondaty indexes
+          //Limit: limit,
+          ReturnConsumedCapacity: 'TOTAL',//INDEXES | TOTAL | NONE',
+          Select: 'ALL_ATTRIBUTES'//'ALL_ATTRIBUTES | ALL_PROJECTED_ATTRIBUTES | SPECIFIC_ATTRIBUTES | COUNT',
+      };
+      var number_of_conditions = 0;
+
+      var params_filter = [];
+      var service_array = service.split(",");
+      for (var i=0; i<service_array.length; i++) {
+        if (service_array[i].length>0) {
+            params_filter['service'] = {
+                  ComparisonOperator: 'EQ',// | NE | IN | LE | LT | GE | GT | BETWEEN | NOT_NULL | NULL | CONTAINS | NOT_CONTAINS | BEGINS_WITH', // required 
+                  AttributeValueList: [ { // AttributeValue 
+                    S:  service_array[i],
+                  }]
+                };
+                number_of_conditions ++;
+              }
+      }
+      var semester_array = semester.split(",");
+      for (var i=0; i<semester_array.length; i++) {
+        if (semester_array[i].length>0) {
+            params_filter['semester'] = {
+                  ComparisonOperator: 'EQ',// | NE | IN | LE | LT | GE | GT | BETWEEN | NOT_NULL | NULL | CONTAINS | NOT_CONTAINS | BEGINS_WITH', // required 
+                  AttributeValueList: [ { // AttributeValue 
+                    S:  semester_array[i],
+                  }]
+                };
+                number_of_conditions ++;
+              }
+        }
+        if (number_of_conditions>0) {
+          params['ScanFilter']= params_filter;
+          if (number_of_conditions>1) {
+              params['ConditionalOperator'] = 'AND';
+          }
+        }
+
+      dynamodb.scan(params, function(err, data) {
+        
+        if (!err) {
+            var return_data = {};
+            return_data.Count = data.Count;
+            return_data.Items = data.Items;
+            res.status(200).json(return_data);
+
+        } else {
+          console.error(err);
+          res.status(500).json(err);
+        }
+      });
     });
 /**** M O N G O ****/
     // Render the dashboard page.
@@ -360,36 +424,20 @@ module.exports = function (router, passport) {
             res.render('error', { title: 'Error', message: 'User is not authenticated'});
         }
     );
-    router.get('/existCSV/:tableName', function (req, res) {
+
+    router.get('/existCSV/:tableName', helper.isAuthenticated, function (req, res) {
       var fs = require('fs');
       var tableName = req.params["tableName"];
-      var path = 'tmp/export_'+tableName+'.csv';
-      fs.exists(path, function(exists) {
-        var ret = {};
-        ret.exists = exists;
-        if (exists) {
-            var stats = fs.statSync(path);
-            ret.mtime = stats.mtime;
-        }
-        res.status(200).json(ret);
-      });
-      
+      helper.getS3FileLastModified(helper.getCsvName(tableName), res);
     });
-    router.get('/getCSV/:tableName', function (req, res) {
-      var fs = require('fs');
+    router.get('/getCSV/:tableName', helper.isAuthenticated, function (req, res) {
+      var s3 = helper.getS3Aws();
       var tableName = req.params["tableName"];
-      var path = 'tmp/export_'+tableName+'.csv';
-      fs.exists(path, function(exists) {
-        var ret = {};
-        ret.exists = exists;
-        if (exists) {
-            res.sendfile(path);
-        }
-        else {
-          res.status(500).json('File can not found!');
-        }
-        
-      });
+      var awsConfig = require('../config/settings').aws; 
+      var params = {Bucket: awsConfig.bucketName, Key: awsConfig.s3PathPrefixCsvFiles+helper.getCsvName(tableName)};
+      var url = s3.getSignedUrl('getObject', params);
+            
+      res.redirect(url);
       
     });
     
