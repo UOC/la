@@ -1,3 +1,6 @@
+const TUPLA_ID = 'ACCESACTIVITAT';
+const OBJECT_TYPE = 'ACTIVITY';
+
 var tupla = {};
 
 tupla.transform = function(doc) {
@@ -7,7 +10,7 @@ tupla.transform = function(doc) {
     var semester = doc.timestamp;
     var subject = doc.context.extensions['uoc:lrs:subject:id'];
     var classroom = doc.context.extensions['uoc:lrs:classroom:id'];
-    var tool = doc.object.definition && doc.object.definition.extensions ? doc.object.definition.extensions['uoc:lrs:tool:id'] : false;
+    var activity = doc.context.extensions['uoc:lrs:activity:id'];
     var type = doc.object.definition ? doc.object.definition.type : false;
 
     if (type
@@ -15,9 +18,9 @@ tupla.transform = function(doc) {
         && semester
         && subject
         && classroom
-        && tool
-        && type != '%{idTipoLink}') {
-        console.log('ACCESEINA');
+        && activity
+        && type == OBJECT_TYPE) {
+        console.log(TUPLA_ID);
         console.log(id);
         return {
             PutRequest: {
@@ -32,7 +35,7 @@ tupla.transform = function(doc) {
                         S: semester
                     },
                     service: {
-                        S: 'ACCESEINA'
+                        S: TUPLA_ID
                     },
                     resource: {
                         M: {
@@ -41,18 +44,14 @@ tupla.transform = function(doc) {
                             }, 
                             classroom: {
                                 S: classroom
+                            },
+                            activity: {
+                                S: activity
                             }
                         }
                     },
                     result: {
-                        M: {
-                            type: {
-                                S: type
-                            },
-                            tool: {
-                                S: tool
-                            }
-                        }
+                        S: "-"
                     }
                 }
             }

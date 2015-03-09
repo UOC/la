@@ -7,14 +7,14 @@ tupla.transform = function(doc) {
     var semester = doc.timestamp;
     var subject = doc.context.extensions['uoc:lrs:subject:id'];
     var classroom = doc.context.extensions['uoc:lrs:classroom:id'];
-    var type = doc.object.definition.type;
+    var type = doc.object.definition ? doc.object.definition.type : false;
 
     if (user
         && semester
         && subject
         && classroom
-        && tool
         && type == 'TEACHING_PLAN') {
+        console.log('PLADOCENT');
         console.log(id);
         return {
             PutRequest: {

@@ -36,7 +36,7 @@ var s = fs.createReadStream(filename)
 
 var make = function(line, callback) {
     if (!line) return callback();
-    var item = transform(JSON.parse(line));
+    var item = transform(line);
     if (item) items.push(item);
     if (items.length != bufferSize) return callback();
     consolida.update(items, function(err) {
@@ -49,7 +49,20 @@ var make = function(line, callback) {
 
 var accesaula = require('./filters/accesaula');
 var acceseina = require('./filters/acceseina');
+var pladocent = require('./filters/pladocent');
+var accesactivitat = require('./filters/accesactivitat');
+var recursosassign = require('./filters/recursosassign');
 
-var transform = function(doc) {
-    return accesaula.transform(doc);
+var transform = function(line) {
+    var item;
+    var doc = JSON.parse(line);
+
+    item = acceseina.transform(doc); if (item) return item;
+    item = pladocent.transform(doc); if (item) return item;
+    item = accesaula.transform(doc); if (item) return item;
+    item = accesactivitat.transform(doc); if (item) return item;
+    item = recursosassign.transform(doc); if (item) return item;
+
+    console.log(line);
+    return false;
 }

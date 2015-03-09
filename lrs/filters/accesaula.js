@@ -8,11 +8,12 @@ tupla.transform = function(doc) {
     var subject = doc.context.extensions['uoc:lrs:subject:id'];
     var classroom = doc.context.extensions['uoc:lrs:classroom:id'];
 
-    if (doc.object.id += "https://cv.uoc.edu/webapps/aulaca"
+    if (doc.object.id == "https://cv.uoc.edu/webapps/aulaca"
         && user
         && semester
         && subject
         && classroom) {
+        console.log('ACCESAULA');
         console.log(id);
         return {
             PutRequest: {

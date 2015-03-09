@@ -1,3 +1,6 @@
+const TUPLA_ID = 'RECURSOSASSIGN';
+const OBJECT_TYPE = 'MIFI';
+
 var tupla = {};
 
 tupla.transform = function(doc) {
@@ -7,14 +10,15 @@ tupla.transform = function(doc) {
     var semester = doc.timestamp;
     var subject = doc.context.extensions['uoc:lrs:subject:id'];
     var classroom = doc.context.extensions['uoc:lrs:classroom:id'];
-    var type = doc.object.definition.type;
+    var type = doc.object.definition ? doc.object.definition.type : false;
 
-    if (user
+    if (type
+        && user
         && semester
         && subject
         && classroom
-        && tool
-        && type == 'MIFI') {
+        && type == OBJECT_TYPE) {
+        console.log(TUPLA_ID);
         console.log(id);
         return {
             PutRequest: {
@@ -29,10 +33,17 @@ tupla.transform = function(doc) {
                         S: semester
                     },
                     service: {
-                        S: 'RECURSOSASSIG'
+                        S: TUPLA_ID
                     },
                     resource: {
-                        S: subject
+                        M: {
+                            subject: {
+                                S: subject
+                            }, 
+                            classroom: {
+                                S: classroom
+                            }
+                        }
                     },
                     result: {
                         S: "-"

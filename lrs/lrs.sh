@@ -1,1 +1,2 @@
 mongoexport --db statements_aula --collection lrs --out lrs.json --limit 10000
+mongoexport --host shanghai.uoc.es --username lrs --password LRs56798242k --db lrs --collection statements --out lrs.json -q '{"_id": {"$gt": ObjectId("54bf8b9b8f8054577403bb81")}}' --limit 1000
