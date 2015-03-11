@@ -30,7 +30,17 @@ passport.serializeUser(function(user, done) {
 
 passport.deserializeUser(function(id, done) {
   findById(id, function (err, user) {
-    done(err, user);
+    if (user) {
+      done(err, user);
+    } else {
+      findByUsernameDB(id, function (err, user) {
+      if (user) {
+        done(err, user);
+        } 
+       }
+      );
+    }
+
   });
 });
 var users = [
@@ -43,7 +53,8 @@ function findById(id, fn) {
   if (users[idx]) {
     fn(null, users[idx]);
   } else {
-    fn(new Error('User ' + id + ' does not exist'));
+    fn(null, null);
+    //fn(new Error('User ' + id + ' does not exist'), null);
   }
 }
 
@@ -56,6 +67,28 @@ function findByUsername(username, fn) {
   }
   return fn(null, null);
 }
+
+/**
+ * Find user by id
+ * @param  {[type]}   username [description]
+ * @param  {Function} fn       [description]
+ * @return {[type]}            [description]
+ */
+function findByUsernameDB(username, fn) {
+    var User = require('./lib/entities/user');
+    User.findById(username, function (err, user) {
+      if (err) {
+          return fn(null, null);
+      } else {
+          
+        return fn(null, user);
+      }
+    })
+}
+
+passport.use(passport.session()); // persistent login sessions
+
+
 passport.use(new LocalStrategy(
   function(username, password, done) {
     // asynchronous verification, for effect...
@@ -67,13 +100,23 @@ passport.use(new LocalStrategy(
       // authenticated `user`.
       findByUsername(username, function(err, user) {
         if (err) { return done(err); }
-        if (!user) { return done(null, false, { message: 'Unknown user ' + username }); }
+        if (!user) { 
+    //      return done(null, false, { message: 'Unknown user ' + username }); 
+          findByUsernameDB(username, function(err, user) {
+            if (err) { return done(err); }
+            if (!user) { return done(null, false, { message: 'Unknown user ' + username }); }
+      //      if (user.password != password) { return done(null, false, { message: 'Invalid password' }); }
+            return done(null, user);
+          })
+
+        }
         if (user.password != password) { return done(null, false, { message: 'Invalid password' }); }
         return done(null, user);
       })
     });
   }
 ));
+
 
 var app = express();
 var router = express.Router();
@@ -129,6 +172,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 app.use(express.static(__dirname + '/node_modules/highlight.js/styles'));
 
+var mongooseInit = require('./config/mongo'); //will hold our database connection settings
+mongooseInit.connect('mongodb://'+db.dbHost+'/'+db.dbName);
+
 var store = new MongoStore({
     db: db.dbName,
     autoReconnect: true,
@@ -165,6 +211,7 @@ var store = new MongoStore({
         // =============================================================================
         app.listen(port);
         console.log('Starting UOC Learning Analytics ' + port);
+
 		// 
 		server.listen(port+1, function () {
 		  console.log("%s listening at %s", server.name, server.url);

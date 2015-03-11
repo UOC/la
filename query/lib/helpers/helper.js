@@ -11,6 +11,27 @@ var self = {
         // IF A USER ISN'T LOGGED IN, THEN REDIRECT THEM SOMEWHERE
         res.redirect('/error_not_authenticated');
     },
+    getLTIValue: function (provider, param_name, decode_base64) {
+
+        var keys_no_encode = ["lti_version", "lti_message_type", "tool_consumer_instance_description", "tool_consumer_instance_guid",
+            "oauth_consumer_key", "custom_lti_message_encoded_base64", "oauth_nonce", "oauth_version", "oauth_callback", "oauth_timestamp", "basiclti_submit", "oauth_signature_method",
+            "oauth_signature", "custom_lti_message_encoded_utf8", "custom_lti_message_encoded_iso", "ext_ims_lis_memberships_url", "ext_ims_lis_memberships_id", "ext_ims_lis_basic_outcome_url", "ext_ims_lti_tool_setting_url", "launch_presentation_return_url" ];
+        var value = eval("provider.body." + param_name);
+
+        if (value !== undefined && decode_base64 && !keys_no_encode[param_name]) {
+            var base64_decode = require('base64').decode;
+
+            var temp_value = new Buffer(value, 'base64');
+            //We do it because the roles parameter doesn't decode well and we use the base64_decode (but base64_decode doesn't decode tilde well, such us é)
+            ////Or param name roles has to decode using the library, why?!?!?!? I don't know because doesn't works
+            if (param_name === 'roles' || temp_value.length == 0 || temp_value == undefined) {
+                value = base64_decode(value).toString('utf8');//new Buffer(value, 'base64').toString('utf8');
+            } else {
+                value = temp_value.toString('utf8');
+            }
+        }
+        return value;
+    },
     getS3Aws: function () {
         var awsConfig = require('../../config/settings').aws; 
         var AWS = require('aws-sdk');

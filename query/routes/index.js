@@ -230,35 +230,41 @@ module.exports = function (router, passport) {
 
       var params_filter = [];
       var service_array = service.split(",");
+      var array_values = [];
       for (var i=0; i<service_array.length; i++) {
         if (service_array[i].length>0) {
-            params_filter['service'] = {
-                  ComparisonOperator: 'EQ',// | NE | IN | LE | LT | GE | GT | BETWEEN | NOT_NULL | NULL | CONTAINS | NOT_CONTAINS | BEGINS_WITH', // required 
-                  AttributeValueList: [ { // AttributeValue 
-                    S:  service_array[i],
-                  }]
-                };
-                number_of_conditions ++;
-              }
+          array_values[array_values.length] = {'S':service_array[i].trim()};
+        }  
       }
+      if (array_values.length>0) {
+        params_filter['service'] = {
+            ComparisonOperator: 'IN',// | NE | IN | LE | LT | GE | GT | BETWEEN | NOT_NULL | NULL | CONTAINS | NOT_CONTAINS | BEGINS_WITH', // required 
+            AttributeValueList: array_values
+          };
+          number_of_conditions ++;
+      }
+
+      array_values = [];
       var semester_array = semester.split(",");
       for (var i=0; i<semester_array.length; i++) {
         if (semester_array[i].length>0) {
-            params_filter['semester'] = {
-                  ComparisonOperator: 'EQ',// | NE | IN | LE | LT | GE | GT | BETWEEN | NOT_NULL | NULL | CONTAINS | NOT_CONTAINS | BEGINS_WITH', // required 
-                  AttributeValueList: [ { // AttributeValue 
-                    S:  semester_array[i],
-                  }]
-                };
-                number_of_conditions ++;
-              }
+          array_values[array_values.length] = {'S':semester_array[i].trim()};
+        }  
+      }
+      if (array_values.length>0) {
+        params_filter['semester'] = {
+            ComparisonOperator: 'IN',// | NE | IN | LE | LT | GE | GT | BETWEEN | NOT_NULL | NULL | CONTAINS | NOT_CONTAINS | BEGINS_WITH', // required 
+            AttributeValueList: array_values
+          };
+          number_of_conditions ++;
+      }
+
+      if (number_of_conditions>0) {
+        params['ScanFilter']= params_filter;
+        if (number_of_conditions>1) {
+            params['ConditionalOperator'] = 'AND';
         }
-        if (number_of_conditions>0) {
-          params['ScanFilter']= params_filter;
-          if (number_of_conditions>1) {
-              params['ConditionalOperator'] = 'AND';
-          }
-        }
+      }
 
       dynamodb.scan(params, function(err, data) {
         
@@ -408,22 +414,6 @@ module.exports = function (router, passport) {
         });
     });
 
-    router.post('/login', passport.authenticate('local', { failureRedirect: '/login', failureFlash: true }),
-      function(req, res) {
-        res.redirect('/');
-      });
-
-    router.post('/signup', passport.authenticate('local', {
-        successRedirect: '/',
-        failureRedirect: '/login',
-        failureFlash: true
-    }));
-
-    router.get('/error_not_authenticated',
-        function (req, res) {
-            res.render('error', { title: 'Error', message: 'User is not authenticated'});
-        }
-    );
 
     router.get('/existCSV/:tableName', helper.isAuthenticated, function (req, res) {
       var fs = require('fs');
