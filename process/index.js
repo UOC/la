@@ -9,7 +9,7 @@ AWS.config.update({region: config.aws_region});
 
 // Main class
 // var modules = ["aepresposta", "matriculat", "assmatr", "login", "matricula"];
-var modules = ["matricula"];
+var modules = ["login"];
 for (var i = 0; i < modules.length; i++) {
   require("./processors/" + modules[i]).execute(AWS);
 }

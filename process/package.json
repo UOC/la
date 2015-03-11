@@ -5,6 +5,7 @@
   "dependencies": {
     "mongojs": "latest",
     "aws-sdk": "latest",
-    "async": "latest"
+    "async": "latest",
+    "MD5": "latest"
   }
 }
