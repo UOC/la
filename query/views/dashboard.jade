@@ -3,6 +3,8 @@ extends layout
 block head
   script(src="/javascripts/la.js")
   script(src="https://highlightjs.org/static/highlight.pack.js")
+  script(src="/javascripts/jsnumberformatter.js")
+  script(src="/javascripts/jsnumberformatter.locale.js")
   link(rel='stylesheet', href='https://highlightjs.org/static/styles/default.css')
   //-link(rel='stylesheet', href='https://highlightjs.org/static/styles/solarized_dark.css')
   //-link(rel='stylesheet', href='https://highlightjs.org/static/styles/solarized_light.css')
@@ -40,8 +42,9 @@ block content
       div.col-md-2
         div(class="form-group") 
           select(name="table", id="tables", class="form-control")
-            
-          span.help-block Select table
+
+          span.help-block Select table &nbsp;
+            span(class="glyphicon glyphicon-info-sign",aria-hidden="true",id="info_table", data-toggle="tooltip" title="" data-html="true")            
       div.col-md-4
         div(class="form-group") 
           input(type="text", name="query", id="query", class="form-control")
@@ -74,7 +77,7 @@ block content
         div(class="form-group") 
           input(type="button", id="send", value="send", class="btn btn-warning")
     div.row
-      div.col-md-11
+      div.col-md-10
         div(id="advanced_search", class="row")  
         div(id="use_advanced_search", class="row")  
           span.gwt-RadioButton
@@ -83,8 +86,13 @@ block content
             span Query
               input(type="radio", name="queryOperations", value="query", id="query_option")
       div.col-md-1
+        div(class="form-group",id="export_to_csv") 
+          input(type="checkbox", name="export_to_csv", id="export_to_csv_checkbox", value="1") 
+          Export CSV
+      div.col-md-1
         div(class="form-group") 
           input(type="button", id="send_advanced", value="send", class="btn btn-warning")
     div.row
       div.col-md-12
-        div(id="result")  
+        div(id="result") 
+      input(type="hidden",name="force_reexport_csv",id="force_reexport_csv",value="0") 

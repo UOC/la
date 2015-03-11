@@ -6,7 +6,6 @@
     "mongojs": "latest",
     "aws-sdk": "latest",
     "async": "latest",
-    "MD5": "latest",
     "JSONStream": "latest",
     "event-stream": "latest"
   }

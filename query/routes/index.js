@@ -67,12 +67,17 @@ module.exports = function (router, passport) {
       };
       dynamodb.describeTable(params, function(err, data) {
         if (!err) {
-          var ret = data.Table.AttributeDefinitions;
+          var ret = {};
+          ret.itemCount = data.Table.ItemCount;
+          ret.provisionedThroughput = data.Table.ProvisionedThroughput;
+          ret.tableSizeBytes = data.Table.TableSizeBytes;
+          ret.attributes = data.Table.AttributeDefinitions;
+
           if (data.Table.KeySchema) {
             for(var i=0; i<data.Table.KeySchema.length; i++) {
-              for (var j=0; j<ret.length; j++) {
-                if (ret[j].AttributeName==data.Table.KeySchema[i]){
-                  ret[j].isKey = true;
+              for (var j=0; j<ret.attributes.length; j++) {
+                if (ret.attributes[j].AttributeName==data.Table.KeySchema[i]){
+                  ret.attributes[j].isKey = true;
                 }
               }
             }
@@ -88,11 +93,18 @@ module.exports = function (router, passport) {
 
       var tableName = (req.body.tableName)?req.body.tableName:'';
       var query = (req.body.query)?req.body.query:'';
+      var export_to_csv = (req.body.export_to_csv)?req.body.export_to_csv=='1':false;
+      var itemsCount = (req.body.itemsCount)?req.body.itemsCount:0;
+      //console.log(req.body);
       //var sort = (req.body.sort)?req.body.sort:'';
       //var sort_order = parseInt((req.body.sort_order)?req.body.sort_order:0,10);
 
       var lastEvaluatedKey = (req.body.lastEvaluatedKey)?req.body.lastEvaluatedKey:'';
       var limit = parseInt((req.body.limit)?req.body.limit:50,10);
+      if (export_to_csv) {
+        limit = itemsCount;
+        lastEvaluatedKey = '';
+      }
       var dynamodb = new helper.getDynamoAws();
       var go_forward = req.body.go_forward?req.body.go_forward=='true':true;
       var is_advanced_search = req.body.is_advanced_search?req.body.is_advanced_search=='true':false;
@@ -126,19 +138,21 @@ module.exports = function (router, passport) {
                   number_of_conditions ++;
                 }
           }
-        params['KeyConditions'] = params_filter;
-        params['IndexName'] = 'user-index';
-
-        if (number_of_conditions>1) {
-            params['ConditionalOperator'] = 'AND';
-        }
-        console.log(params);
+          if (params_filter.length>1) {
+            params_filter['ConditionalOperator'] = 'AND';
+          }
+        params['KeyConditions']= params_filter;
+        //console.log(params);
       dynamodb.query(params, function(err, data) {
         
         if (!err) {
-          console.log("Returned items "+data.Items.length);
-          console.log("Items ", data.Items);
-          res.status(200).json(data);
+          //console.log("Returned items "+data.Items.length);
+          //console.log("Items ", data.Items);
+          if (export_to_csv) {
+            helper.exportToCSV(data.Items, tableName, res);
+          } else {
+            res.status(200).json(data);
+          }
 
         } else {
           console.error(err);
@@ -177,12 +191,17 @@ module.exports = function (router, passport) {
         if (number_of_conditions>1) {
             params['ConditionalOperator'] = 'AND';
         }
+        //console.log(params);
         dynamodb.scan(params, function(err, data) {
         
         if (!err) {
-          console.log("Returned items "+data.Items.length);
-          console.log("Items ", data.Items);
-          res.status(200).json(data);
+          //console.log("Returned items "+data.Items.length);
+          //console.log("Items ", data.Items);
+          if (export_to_csv) {
+            helper.exportToCSV(data.Items, tableName, res);
+          } else {
+            res.status(200).json(data);
+          }
 
         } else {
           console.error(err);
@@ -190,6 +209,76 @@ module.exports = function (router, passport) {
         }
       });
      }
+    });
+
+    // Render the dashboard page.
+    router.post('/get_services', function (req, res) {
+
+      var tableName = 'learnginAnalyticsServiceSemester';
+      var service = (req.body.service)?req.body.service:'';
+      var semester = (req.body.semester)?req.body.semester:'';
+      var limit = 0;
+      var dynamodb = new helper.getDynamoAws();
+      var params = {
+          TableName: tableName, /* required */
+          //ConsistentRead: true, Not supported on secondaty indexes
+          //Limit: limit,
+          ReturnConsumedCapacity: 'TOTAL',//INDEXES | TOTAL | NONE',
+          Select: 'ALL_ATTRIBUTES'//'ALL_ATTRIBUTES | ALL_PROJECTED_ATTRIBUTES | SPECIFIC_ATTRIBUTES | COUNT',
+      };
+      var number_of_conditions = 0;
+
+      var params_filter = [];
+      var service_array = service.split(",");
+      var array_values = [];
+      for (var i=0; i<service_array.length; i++) {
+        if (service_array[i].length>0) {
+          array_values[array_values.length] = {'S':service_array[i].trim()};
+        }  
+      }
+      if (array_values.length>0) {
+        params_filter['service'] = {
+            ComparisonOperator: 'IN',// | NE | IN | LE | LT | GE | GT | BETWEEN | NOT_NULL | NULL | CONTAINS | NOT_CONTAINS | BEGINS_WITH', // required 
+            AttributeValueList: array_values
+          };
+          number_of_conditions ++;
+      }
+
+      array_values = [];
+      var semester_array = semester.split(",");
+      for (var i=0; i<semester_array.length; i++) {
+        if (semester_array[i].length>0) {
+          array_values[array_values.length] = {'S':semester_array[i].trim()};
+        }  
+      }
+      if (array_values.length>0) {
+        params_filter['semester'] = {
+            ComparisonOperator: 'IN',// | NE | IN | LE | LT | GE | GT | BETWEEN | NOT_NULL | NULL | CONTAINS | NOT_CONTAINS | BEGINS_WITH', // required 
+            AttributeValueList: array_values
+          };
+          number_of_conditions ++;
+      }
+
+      if (number_of_conditions>0) {
+        params['ScanFilter']= params_filter;
+        if (number_of_conditions>1) {
+            params['ConditionalOperator'] = 'AND';
+        }
+      }
+
+      dynamodb.scan(params, function(err, data) {
+        
+        if (!err) {
+            var return_data = {};
+            return_data.Count = data.Count;
+            return_data.Items = data.Items;
+            res.status(200).json(return_data);
+
+        } else {
+          console.error(err);
+          res.status(500).json(err);
+        }
+      });
     });
 /**** M O N G O ****/
     // Render the dashboard page.
@@ -274,7 +363,7 @@ module.exports = function (router, passport) {
         url += '&sort='+encodeURIComponent(sort+':'+sort_order);
       }
       //var url = req.protocol + '://' + hostArray[0] + ":" + (hostArray[1]+1) + '/lrs/statements';
-      console.log("Query "+url);
+      //console.log("Query "+url);
       var Client = require('node-rest-client').Client;
 
       var client = new Client();
@@ -325,21 +414,21 @@ module.exports = function (router, passport) {
         });
     });
 
-    router.post('/login', passport.authenticate('local', { failureRedirect: '/login', failureFlash: true }),
-      function(req, res) {
-        res.redirect('/');
-      });
 
-    router.post('/signup', passport.authenticate('local', {
-        successRedirect: '/',
-        failureRedirect: '/login',
-        failureFlash: true
-    }));
-
-    router.get('/error_not_authenticated',
-        function (req, res) {
-            res.render('error', { title: 'Error', message: 'User is not authenticated'});
-        }
-    );
+    router.get('/existCSV/:tableName', helper.isAuthenticated, function (req, res) {
+      var fs = require('fs');
+      var tableName = req.params["tableName"];
+      helper.getS3FileLastModified(helper.getCsvName(tableName), res);
+    });
+    router.get('/getCSV/:tableName', helper.isAuthenticated, function (req, res) {
+      var s3 = helper.getS3Aws();
+      var tableName = req.params["tableName"];
+      var awsConfig = require('../config/settings').aws; 
+      var params = {Bucket: awsConfig.bucketName, Key: awsConfig.s3PathPrefixCsvFiles+helper.getCsvName(tableName)};
+      var url = s3.getSignedUrl('getObject', params);
+            
+      res.redirect(url);
+      
+    });
     
 };

@@ -15,14 +15,19 @@
     "passport-local": "latest",
     "connect-flash": "latest",
     "jade": "latest",
-    "cluster": "latest",
     "node-rest-client": "latest",
-    "fs": "latest",
     "restify": "2.3.x",
     "mongodb": "1.2.x",
+    "mongoose": ">=0.0.0",
+    "node-uuid": ">=0.0.0",
     "i18next": "latest",
     "tincanjs": "latest",
     "aws-sdk": "latest",
-    "MD5": "latest"
+    "json2csv": "latest",
+    "mkdirp": "latest",
+    "async": "^0.9.0",
+    "MD5": "latest",
+    "base64": "latest",
+    "ims-lti": ">= 0.0.0"
   }
 }
