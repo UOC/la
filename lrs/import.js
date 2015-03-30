@@ -92,8 +92,11 @@ var transform = function(line) {
     var doc = JSON.parse(line);
 
     // filter username
-    if (doc && doc.user && userHash[doc.user]) doc.user = userHash[doc.user];
-    
+    if (doc && doc.user && userHash[doc.user]) {
+      console.log('ofuscating user', doc.user);
+      doc.user = userHash[doc.user];
+    }
+
     item = acceseina.transform(doc); if (item) return item;
     item = pladocent.transform(doc); if (item) return item;
     item = accesaula.transform(doc); if (item) return item;
