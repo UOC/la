@@ -92,9 +92,11 @@ var transform = function(line) {
     var doc = JSON.parse(line);
 
     // filter username
-    if (doc && doc.user && userHash[doc.user]) {
-      console.log('ofuscating user', doc.user);
-      doc.user = userHash[doc.user];
+    if (doc && doc.actor && doc.actor.account && doc.actor.account.name && userHash[parseInt(doc.actor.account.name)]) {
+      console.log('ofuscating user', doc.actor.account.name);
+      doc.actor.account.name = userHash[parseInt(doc.actor.account.name)];
+    } else {
+      console.log('User not found, using original value');
     }
 
     item = acceseina.transform(doc); if (item) return item;
