@@ -7,32 +7,66 @@ var filename = args[0];
 
 var fs = require('fs')
     , stream = require('stream')
-    , es = require("event-stream");
+    , es = require("event-stream")
+    , mongojs = require('mongojs')
+    , config = require('../config/settings').settings;
 
 var index = 1;
 var bufferSize = 25;
 var items = [];
 
-var s = fs.createReadStream(filename)
-    .pipe(es.split())
-    .pipe(es.mapSync(function(line) {
-        s.pause();
-        make(line, function(err) {
-            s.resume();
-        });
-    })
-    .on('error', function() {
-        console.log('Error while reading file.');
-    })
-    .on('end', function() {
-        if (items.length > 0) {
-            consolida.update(items, function(err) {
-                err && console.log(err);
-                console.log(util.format('%d blocks updated', index++));
-            });
-        }
-    })
-);
+// extract people from mongo collection
+var db = mongojs(config.db_connection_url, [config.source_collection, config.people_source_collection]);
+var userHash = [];
+var extractPeople = function(callback, errorCallback) {
+  console.log('Extracting people');
+  var peopleCollection = eval('db.'+config.people_source_collection);
+  peopleCollection.find().forEach(function(err, doc) {
+    if (err) {
+      if (errorCallback) {
+          errorCallback(err);
+      } else {
+        console.log(err);
+      }
+      return;
+    }
+    if (doc !== null && doc._id) {
+      userHash[parseInt(doc._id)] = doc.hash;
+    }
+    else if (doc == null) {
+      // callback()
+      console.log('callback!', userHash.length);
+      callback();
+    }
+  });
+};
+
+extractPeople(function() {
+  var s = fs.createReadStream(filename)
+      .pipe(es.split())
+      .pipe(es.mapSync(function(line) {
+          s.pause();
+          make(line, function(err) {
+              s.resume();
+          });
+      })
+      .on('error', function() {
+          console.log('Error while reading file.');
+      })
+      .on('end', function() {
+          if (items.length > 0) {
+              consolida.update(items, function(err) {
+                  err && console.log(err);
+                  console.log(util.format('%d blocks updated', index++));
+              });
+          }
+      })
+  );
+}, function(err) {
+  console.log(err);
+  process.exit(-1);
+});
+
 
 var make = function(line, callback) {
     if (!line) return callback();
@@ -57,6 +91,9 @@ var transform = function(line) {
     var item;
     var doc = JSON.parse(line);
 
+    // filter username
+    if (doc && doc.user && userHash[doc.user]) doc.user = userHash[doc.user];
+    
     item = acceseina.transform(doc); if (item) return item;
     item = pladocent.transform(doc); if (item) return item;
     item = accesaula.transform(doc); if (item) return item;

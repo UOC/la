@@ -6,5 +6,6 @@ exports.settings = {
       collection_enrollment_by_user: 'statements',
       collection_enrollment_by_user_and_semester: 'matricula_per_usuaris_i_semestres',
       aws_region: 'eu-west-1',
-      dinamo_table_name: 'learningAnalytics'
+      dinamo_table_name: 'learningAnalytics',
+      people_source_collection: 'people'
 }

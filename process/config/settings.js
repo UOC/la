@@ -8,7 +8,10 @@ exports.settings = {
       aws_region: 'eu-west-1',
       dinamo_table_name: 'learningAnalytics',
       login: {
-
+        removePreviousElements: false,
+        // initialLine: {
+        //   'temp/xbs': 168425
+        // }
       },
       aepresposta: {
 
@@ -22,4 +25,4 @@ exports.settings = {
       matricula: {
         initialBlock: 57625
       },
-}
+};
