@@ -7,3 +7,4 @@ query/config/lrs.js
 query/node_modules
 .Rproj.user
 *.log
+process/logininfo.csv
